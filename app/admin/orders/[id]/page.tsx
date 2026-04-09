@@ -1,0 +1,137 @@
+// app/admin/orders/[id]/page.tsx
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, Package, CreditCard, Truck } from "lucide-react";
+
+export default function OrderDetailsPage() {
+  const params = useParams();
+  const id = params.id as string;
+  
+  const [order, setOrder] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+    const fetchOrder = async () => {
+      try {
+        const res = await fetch(`/api/orders/${id}`);
+        const data = await res.json();
+        if (data.order) setOrder(data.order);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchOrder();
+  }, [id]);
+
+  if (isLoading) {
+    return <div className="p-10 text-center text-[#1A1A1A]/50">Loading order details...</div>;
+  }
+
+  if (!order) {
+    return <div className="p-10 text-center text-red-500">Order not found.</div>;
+  }
+
+  return (
+    <div className="p-6 md:p-10 max-w-5xl mx-auto">
+      <Link href="/admin/orders" className="inline-flex items-center text-[11px] uppercase tracking-widest text-gray-500 hover:text-[#B76E79] transition-colors mb-6">
+        <ArrowLeft size={14} className="mr-2" /> Back to Orders
+      </Link>
+
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-light text-[#1A1A1A] tracking-wide" style={{ fontFamily: "var(--font-serif)" }}>
+            Order {order.orderNumber}
+          </h1>
+          <p className="text-sm text-[#1A1A1A]/60 mt-1">
+            Placed on {new Date(order.createdAt).toLocaleDateString()}
+          </p>
+        </div>
+        <div className="px-4 py-2 bg-[#F7E7CE]/30 text-[#1A1A1A] text-xs tracking-widest uppercase font-medium border border-[#F7E7CE]">
+          {order.status}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left Column - Items */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white border border-[#1A1A1A]/10 p-6 shadow-sm">
+            <h2 className="text-sm tracking-widest uppercase text-[#1A1A1A] mb-6 flex items-center gap-2">
+              <Package size={16} /> Items Ordered
+            </h2>
+            <div className="divide-y divide-[#1A1A1A]/10">
+              {order.items.map((item: any, index: number) => (
+                <div key={index} className="py-4 flex justify-between items-center">
+                  <div className="flex items-center gap-4">
+                    {item.image && (
+                      <img src={item.image} alt={item.name} className="w-16 h-16 object-cover border border-[#1A1A1A]/10" />
+                    )}
+                    <div>
+                      <p className="text-sm font-medium text-[#1A1A1A]">{item.name}</p>
+                      <p className="text-xs text-[#1A1A1A]/50 font-mono mt-1">SKU: {item.sku}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-[#1A1A1A]">${item.price.toFixed(2)} x {item.quantity}</p>
+                    <p className="text-sm font-semibold text-[#1A1A1A] mt-1">${item.subtotal.toFixed(2)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Totals */}
+            <div className="border-t border-[#1A1A1A]/10 mt-4 pt-4 space-y-2">
+              <div className="flex justify-between text-sm text-[#1A1A1A]/70">
+                <span>Subtotal</span>
+                <span>${order.subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm text-[#1A1A1A]/70">
+                <span>Shipping</span>
+                <span>${order.shippingCost.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-base font-semibold text-[#1A1A1A] pt-2">
+                <span>Total</span>
+                <span>${order.total.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column - Customer Info */}
+        <div className="space-y-6">
+          <div className="bg-white border border-[#1A1A1A]/10 p-6 shadow-sm">
+            <h2 className="text-sm tracking-widest uppercase text-[#1A1A1A] mb-4 flex items-center gap-2">
+              <Truck size={16} /> Shipping Details
+            </h2>
+            <p className="text-sm text-[#1A1A1A] font-medium">{order.shippingAddress.fullName}</p>
+            <p className="text-sm text-[#1A1A1A]/70 mt-1">{order.guestEmail}</p>
+            <p className="text-sm text-[#1A1A1A]/70">{order.shippingAddress.phone}</p>
+            <div className="mt-4 text-sm text-[#1A1A1A]/70 leading-relaxed">
+              <p>{order.shippingAddress.line1}</p>
+              {order.shippingAddress.line2 && <p>{order.shippingAddress.line2}</p>}
+              <p>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}</p>
+              <p>{order.shippingAddress.country}</p>
+            </div>
+          </div>
+
+          <div className="bg-white border border-[#1A1A1A]/10 p-6 shadow-sm">
+            <h2 className="text-sm tracking-widest uppercase text-[#1A1A1A] mb-4 flex items-center gap-2">
+              <CreditCard size={16} /> Payment
+            </h2>
+            <p className="text-sm text-[#1A1A1A]/70">
+              Method: <span className="font-medium text-[#1A1A1A]">{order.paymentMethod}</span>
+            </p>
+            <p className="text-sm text-[#1A1A1A]/70 mt-1">
+              Status: <span className="font-medium text-[#1A1A1A] capitalize">{order.paymentStatus}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
