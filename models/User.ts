@@ -28,6 +28,9 @@ const UserSchema = new Schema(
       type: Boolean,
       default: true,
     },
+    // NEW FIELDS FOR PASSWORD RESET
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
   },
   {
     timestamps: true,
@@ -38,6 +41,8 @@ const UserSchema = new Schema(
         delete ret._id;
         delete ret.__v;
         delete ret.passwordHash;
+        delete ret.resetPasswordToken;   // Keep these private
+        delete ret.resetPasswordExpires; // Keep these private
       },
     },
   }

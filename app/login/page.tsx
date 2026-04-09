@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,13 +34,14 @@ export default function LoginPage() {
 
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error || "Login failed");
+        // This triggers the red error box below!
+        setError(data.error || "Incorrect email or password.");
         return;
       }
 
       router.push(redirectTo);
     } catch (err) {
-      setError("Unable to log in. Please try again.");
+      setError("Unable to log in. Please check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -56,34 +58,50 @@ export default function LoginPage() {
             Access your account to view orders, save favorites, and checkout faster.
           </p>
 
+          {/* ERROR MESSAGE BOX */}
           {error && (
-            <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 animate-in fade-in duration-200">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            <label className="block text-sm font-medium text-[#1A1A1A]">
-              Email
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-[#1A1A1A]">
+                Email
+              </label>
               <input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 required
                 className="mt-2 w-full rounded-lg border border-[#D8C2B6] bg-white px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-[#B76E79]"
               />
-            </label>
+            </div>
 
-            <label className="block text-sm font-medium text-[#1A1A1A]">
-              Password
+            <div>
+              {/* PASSWORD LABEL & FORGOT PASSWORD LINK */}
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm font-medium text-[#1A1A1A]">
+                  Password
+                </label>
+                <Link 
+                  href="/forgot-password" 
+                  className="text-[12px] font-medium text-[#B76E79] hover:text-[#8f4f5b] hover:underline transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
               <input
+                id="password"
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
                 className="mt-2 w-full rounded-lg border border-[#D8C2B6] bg-white px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-[#B76E79]"
               />
-            </label>
+            </div>
 
             <button
               type="submit"
@@ -96,9 +114,9 @@ export default function LoginPage() {
 
           <p className="mt-6 text-center text-sm text-[#1A1A1A]/70">
             Don’t have an account?{' '}
-            <a href="/register" className="font-semibold text-[#B76E79] hover:text-[#8f4f5b]">
+            <Link href="/register" className="font-semibold text-[#B76E79] hover:text-[#8f4f5b]">
               Create one
-            </a>
+            </Link>
           </p>
         </div>
       </div>
