@@ -187,46 +187,54 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`fixed top-0 inset-x-0 z-40 transition-all duration-500 ${scrolled ? "bg-[#F7E7CE]/95 backdrop-blur-md shadow-sm" : "bg-transparent"}`}>
+      <header className={`fixed top-0 inset-x-0 z-40 transition-all duration-500 
+        ${scrolled ? "bg-[#F7E7CE]/95 backdrop-blur-md shadow-sm" : "bg-white/80 md:bg-transparent backdrop-blur-sm md:backdrop-blur-none"}`}>
+        
         {/* Announcement Bar */}
-        <div className={`bg-[#1A1A1A] text-[#F7E7CE] text-[10px] tracking-[0.25em] uppercase text-center transition-all duration-500 flex items-center justify-center ${scrolled ? "h-0 opacity-0" : "h-8 opacity-100"}`}>
+        <div className={`bg-[#1A1A1A] text-[#F7E7CE] text-[10px] tracking-[0.25em] uppercase text-center transition-all duration-500 flex items-center justify-center 
+          ${scrolled ? "h-0 opacity-0" : "h-8 opacity-100"}`}>
           Complimentary shipping over $150
         </div>
 
-        {/* Main Nav */}
-        <div className={`max-w-[1400px] mx-auto px-6 md:px-10 flex items-center justify-between transition-all duration-500 ${scrolled ? "py-3" : "py-6"}`}>
+        {/* Main Nav - Restructured to 3-Column Layout */}
+        <div className={`max-w-[1400px] mx-auto px-4 md:px-10 flex items-center transition-all duration-500 ${scrolled ? "py-3" : "py-5 md:py-8"}`}>
           
-          {/* Left: Hamburger (Mobile) / Placeholder (Desktop) */}
-          <div className="flex-1 md:hidden">
-            <button onClick={() => setMobileOpen(true)} className="text-[#1A1A1A]"><Menu size={22} /></button>
+          {/* Column 1: Left (Mobile Hamburger / Desktop Nav Space) */}
+          <div className="flex-1 flex items-center">
+            <button 
+              onClick={() => setMobileOpen(true)} 
+              className="md:hidden text-[#1A1A1A] p-2 -ml-2 hover:text-[#B76E79] transition-colors"
+            >
+              <Menu size={22} />
+            </button>
+            
+            {/* Logic for desktop navigation alignment could also go here if needed */}
           </div>
 
-          {/* Centre: Logo */}
-          {/* FIX: Removed absolute positioning on mobile to prevent overlapping */}
-          <Link href="/" className="flex flex-col items-center md:items-start text-center md:text-left z-10 transition-all">
-            <span className="text-[20px] sm:text-[24px] md:text-[28px] tracking-[0.2em] md:tracking-[0.35em] font-light text-[#1A1A1A] leading-none" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-              ADOROUS
-            </span>
-            <span className="text-[8px] md:text-[9px] tracking-[0.3em] md:tracking-[0.4em] uppercase text-[#B76E79] mt-0.5 font-medium">
-              Fashion
-            </span>
-          </Link>
+          {/* Column 2: Centre (Logo) */}
+          <div className="flex-[2] flex justify-center">
+            <Link href="/" className="flex flex-col items-center group transition-transform duration-300">
+              <span className="text-[18px] sm:text-[22px] md:text-[28px] tracking-[0.2em] md:tracking-[0.35em] font-light text-[#1A1A1A] leading-none" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+                ADOROUS
+              </span>
+              <span className="text-[7px] md:text-[9px] tracking-[0.3em] md:tracking-[0.4em] uppercase text-[#B76E79] mt-1 font-medium">
+                Fashion
+              </span>
+            </Link>
+          </div>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex flex-1 justify-center">
-            <ul className="flex items-center gap-8">
-              {navLinks.map((link) => <NavItem key={link.href} link={link} pathname={pathname} />)}
-            </ul>
-          </nav>
-
-          {/* Right Actions */}
-          <div className="flex-1 flex justify-end items-center gap-4 md:gap-6">
-            <button onClick={() => setSearchOpen(true)} className="text-[#1A1A1A]"><Search size={19} /></button>
-            <Link href="/account" className="hidden sm:block text-[#1A1A1A]"><User size={19} /></Link>
-            <button onClick={toggleCart} className="relative text-[#1A1A1A]">
+          {/* Column 3: Right (Actions) */}
+          <div className="flex-1 flex justify-end items-center gap-1 sm:gap-4 md:gap-6">
+            <button onClick={() => setSearchOpen(true)} className="p-2 text-[#1A1A1A] hover:text-[#B76E79] transition-colors">
+              <Search size={19} />
+            </button>
+            <Link href="/account" className="hidden sm:flex p-2 text-[#1A1A1A] hover:text-[#B76E79] transition-colors">
+              <User size={19} />
+            </Link>
+            <button onClick={toggleCart} className="relative p-2 text-[#1A1A1A] hover:text-[#B76E79] transition-colors">
               <ShoppingBag size={19} />
               {itemCount > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-[16px] h-[16px] bg-[#B76E79] text-white text-[9px] rounded-full flex items-center justify-center">
+                <span className="absolute top-1 right-0 min-w-[15px] h-[15px] bg-[#B76E79] text-white text-[9px] rounded-full flex items-center justify-center font-bold">
                   {itemCount}
                 </span>
               )}
@@ -234,6 +242,13 @@ export default function Navbar() {
           </div>
 
         </div>
+
+        {/* Desktop-Only Centered Navigation (Bottom of Header) */}
+        <nav className="hidden md:flex justify-center pb-4">
+          <ul className="flex items-center gap-10">
+            {navLinks.map((link) => <NavItem key={link.href} link={link} pathname={pathname} />)}
+          </ul>
+        </nav>
       </header>
 
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
