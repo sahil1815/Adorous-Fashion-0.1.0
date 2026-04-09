@@ -4,13 +4,13 @@
  * ProductCard.tsx
  *
  * Features:
- *  - Primary → secondary image crossfade on hover
- *  - "Quick Add" tray slides up on hover (with optional color swatches)
- *  - Wishlist heart toggle with scale animation
- *  - "New" / "Sale" / custom badge support
- *  - Strikethrough compareAtPrice + % saved pill
- *  - Skeleton loading state
- *  - Fully accessible: keyboard-navigable, aria labels
+ * - Primary → secondary image crossfade on hover
+ * - "Quick Add" tray slides up on hover (with optional color swatches)
+ * - Wishlist heart toggle with scale animation
+ * - "New" / "Sale" / custom badge support
+ * - Strikethrough compareAtPrice + % saved pill
+ * - Skeleton loading state
+ * - Fully accessible: keyboard-navigable, aria labels
  */
 
 import { useState, useCallback } from "react";
@@ -167,7 +167,8 @@ export default function ProductCard({
         variantId: activeSwatch?.variantId,
         name,
         slug,
-        image: images.primary.url,
+        // Safely access the image url, or use a fallback for the cart
+        image: images?.primary?.url || "/placeholder.jpg",
         price,
         quantity: 1,
         attributes: activeSwatch ? { color: activeSwatch.label } : undefined,
@@ -200,25 +201,25 @@ export default function ProductCard({
         tabIndex={0}
         aria-label={`View ${name}`}
       >
-        {/* Primary image */}
+        {/* Primary image - Safely handled */}
         <Image
-          src={images.primary.url}
-          alt={images.primary.alt}
+          src={images?.primary?.url || "/placeholder.jpg"}
+          alt={images?.primary?.alt || name}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           className={`
             object-cover object-center
             transition-all duration-700 ease-[cubic-bezier(0.25,0.1,0.25,1)]
-            ${hovered && images.hover ? "opacity-0 scale-[1.03]" : "opacity-100 scale-100"}
+            ${hovered && images?.hover?.url ? "opacity-0 scale-[1.03]" : "opacity-100 scale-100"}
           `}
           priority={false}
         />
 
-        {/* Hover / secondary image */}
-        {images.hover && (
+        {/* Hover / secondary image - Safely handled */}
+        {images?.hover?.url && (
           <Image
             src={images.hover.url}
-            alt={images.hover.alt}
+            alt={images.hover.alt || `${name} hover`}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className={`
