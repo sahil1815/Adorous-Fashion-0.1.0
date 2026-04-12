@@ -71,8 +71,9 @@ function getColorFromVariant(variant: any): string {
 export default async function HomePage() {
   const featuredProducts = await getFeaturedProducts();
 
+  // Explicitly setting bg-white so dark mode doesn't turn the background black!
   return (
-    <main>
+    <main className="bg-white">
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <Hero />
 
