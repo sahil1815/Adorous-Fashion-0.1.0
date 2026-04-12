@@ -92,7 +92,7 @@ export default async function HomePage() {
             </h2>
           </div>
           <Link
-            href="/products"
+            href="/shop"
             className="
               hidden border-b border-[#1A1A1A] pb-0.5 text-[11px] uppercase tracking-[0.18em]
               text-[#1A1A1A] transition-colors duration-200
