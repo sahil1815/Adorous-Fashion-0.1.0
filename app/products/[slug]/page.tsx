@@ -1,5 +1,4 @@
 // app/products/[slug]/page.tsx
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import connectDB from "@/lib/mongodb";
 import Product from "@/models/Product";
@@ -8,10 +7,17 @@ import ProductInfo from "@/components/shop/ProductInfo";
 import ProductGrid from "@/components/shop/ProductGrid";
 import type { ProductCardProps } from "@/components/shop/ProductCard";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+// Safely await params for Next.js 15 compatibility
+type Props = { params: Promise<{ slug: string }> | { slug: string } };
+
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   await connectDB();
-  // FIX: Removed isActive requirement to ensure it finds the product
-  const product = await Product.findOne({ slug: params.slug }).lean();
+  
+  // Case-insensitive search
+  const product = await Product.findOne({ 
+    slug: { $regex: new RegExp(`^${params.slug}$`, "i") } 
+  }).lean();
 
   if (!product) return { title: "Product Not Found" };
 
@@ -21,16 +27,35 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
+export default async function ProductDetailPage(props: Props) {
+  const params = await props.params;
   await connectDB();
 
-  // 1. Fetch main product (Removed isActive: true)
-  const raw = await Product.findOne({ slug: params.slug })
+  // 1. Fetch main product with Case-Insensitive Regex
+  const raw = await Product.findOne({ 
+    slug: { $regex: new RegExp(`^${params.slug}$`, "i") } 
+  })
     .populate("category", "name slug")
     .lean();
 
-  // If it still can't find it, the slug in the URL literally doesn't match the DB
-  if (!raw) notFound();
+  // 🚨 DIAGNOSTIC MODE: Instead of a 404, tell us EXACTLY what is in the DB
+  if (!raw) {
+    const allProducts = await Product.find({}).select('name slug').limit(10).lean();
+    return (
+      <div className="pt-40 pb-20 px-10 text-center max-w-2xl mx-auto min-h-screen">
+        <h1 className="text-2xl text-red-600 mb-4 font-bold">Data Mismatch Detected</h1>
+        <p className="mb-2 text-lg">The URL searched for this exact slug:</p>
+        <code className="bg-gray-100 p-2 text-blue-600 font-bold rounded mb-8 block">
+          "{params.slug}"
+        </code>
+        
+        <p className="mb-2 text-lg">But your database currently contains these products:</p>
+        <div className="bg-gray-100 p-4 rounded text-left overflow-auto text-sm">
+          <pre>{JSON.stringify(allProducts, null, 2)}</pre>
+        </div>
+      </div>
+    );
+  }
 
   // 2. Bulletproof Category Fallback
   const categoryName = raw.category?.name || "Uncategorized";
@@ -84,7 +109,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   });
 
   return (
-    <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-32 pb-20">
+    <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-40 pb-20">
       
       {/* ── Hero: gallery + info ─────────────────────────────────────────── */}
       <section className="py-10 md:py-14">
