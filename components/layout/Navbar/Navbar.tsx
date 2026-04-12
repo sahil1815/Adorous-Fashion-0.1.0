@@ -63,7 +63,8 @@ function NavItem({ link, pathname }: { link: NavLink; pathname: string }) {
       <Link
         href={link.href}
         onClick={(e) => { if (link.children && link.children.length > 0) e.preventDefault(); }}
-        className={`group flex items-center gap-0.5 text-[12px] lg:text-[13px] tracking-[0.12em] uppercase font-medium transition-colors duration-200 ${isActive ? "text-[#B76E79]" : "text-[#1A1A1A] hover:text-[#B76E79]"}`}
+        // Added whitespace-nowrap here so text never breaks into two lines!
+        className={`group flex items-center gap-0.5 text-[12px] lg:text-[13px] tracking-[0.12em] uppercase font-medium transition-colors duration-200 whitespace-nowrap ${isActive ? "text-[#B76E79]" : "text-[#1A1A1A] hover:text-[#B76E79]"}`}
       >
         {link.label}
         {link.children && <ChevronDown size={12} className={`transition-transform duration-200 ${dropdownOpen ? "rotate-180" : ""}`} />}
@@ -73,7 +74,7 @@ function NavItem({ link, pathname }: { link: NavLink; pathname: string }) {
       {link.children && dropdownOpen && (
         <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 bg-white border border-[#F7E7CE] shadow-[0_8px_40px_rgba(26,26,26,0.08)] rounded-sm min-w-[180px] py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
           {link.children.map((child) => (
-            <Link key={child.href} href={child.href} className="block px-5 py-2.5 text-[12px] tracking-[0.08em] uppercase text-[#1A1A1A] hover:text-[#B76E79] hover:bg-[#F7E7CE]/40 transition-colors duration-150">
+            <Link key={child.href} href={child.href} className="block px-5 py-2.5 text-[12px] tracking-[0.08em] uppercase text-[#1A1A1A] hover:text-[#B76E79] hover:bg-[#F7E7CE]/40 transition-colors duration-150 whitespace-nowrap">
               {child.label}
             </Link>
           ))}
@@ -196,49 +197,30 @@ export default function Navbar() {
           Complimentary shipping over $150
         </div>
 
-        {/* Main Nav - Restructured to a 3-Column Grid for perfect centering */}
-        <div className={`max-w-[1400px] mx-auto px-4 md:px-10 grid grid-cols-3 items-center transition-all duration-500 ${scrolled ? "py-3" : "py-4 md:py-6"}`}>
+        {/* Top Row: Mobile Hamburger, Centered Logo, Icons */}
+        <div className={`max-w-[1400px] mx-auto px-4 md:px-10 flex items-center transition-all duration-500 ${scrolled ? "py-3" : "py-4 md:py-6"}`}>
           
-          {/* Column 1: Left (Mobile Hamburger OR Desktop Logo) */}
-          <div className="flex justify-start items-center">
-            {/* Mobile Hamburger */}
+          {/* Left: Hamburger (Mobile only) */}
+          <div className="flex-1 flex items-center">
             <button onClick={() => setMobileOpen(true)} className="md:hidden text-[#1A1A1A] p-2 -ml-2 hover:text-[#B76E79] transition-colors">
               <Menu size={22} />
             </button>
+          </div>
 
-            {/* Desktop Logo */}
-            <Link href="/" className="hidden md:flex flex-col items-start group transition-transform duration-300">
-              <span className="text-[22px] lg:text-[26px] xl:text-[28px] tracking-[0.25em] lg:tracking-[0.35em] font-light text-[#1A1A1A] leading-none" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          {/* Center: Logo */}
+          <div className="flex-[2] flex justify-center">
+            <Link href="/" className="flex flex-col items-center group transition-transform duration-300">
+              <span className="text-[18px] sm:text-[22px] md:text-[28px] tracking-[0.2em] md:tracking-[0.35em] font-light text-[#1A1A1A] leading-none" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
                 ADOROUS
               </span>
-              <span className="text-[8px] lg:text-[9px] tracking-[0.3em] lg:tracking-[0.4em] uppercase text-[#B76E79] mt-1 font-medium ml-1">
+              <span className="text-[7px] md:text-[9px] tracking-[0.3em] md:tracking-[0.4em] uppercase text-[#B76E79] mt-1 font-medium">
                 Fashion
               </span>
             </Link>
           </div>
 
-          {/* Column 2: Center (Mobile Logo OR Desktop Navigation Links) */}
-          <div className="flex justify-center items-center">
-            {/* Mobile Logo */}
-            <Link href="/" className="md:hidden flex flex-col items-center group transition-transform duration-300">
-              <span className="text-[18px] sm:text-[22px] tracking-[0.2em] font-light text-[#1A1A1A] leading-none" style={{ fontFamily: "'Cormorant Garamond', serif" }}>
-                ADOROUS
-              </span>
-              <span className="text-[7px] tracking-[0.3em] uppercase text-[#B76E79] mt-1 font-medium">
-                Fashion
-              </span>
-            </Link>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex">
-              <ul className="flex items-center gap-5 lg:gap-8 xl:gap-10">
-                {navLinks.map((link) => <NavItem key={link.href} link={link} pathname={pathname} />)}
-              </ul>
-            </nav>
-          </div>
-
-          {/* Column 3: Right (Actions) */}
-          <div className="flex justify-end items-center gap-1 sm:gap-4 lg:gap-6">
+          {/* Right: Icons */}
+          <div className="flex-1 flex justify-end items-center gap-1 sm:gap-4 md:gap-6">
             <button onClick={() => setSearchOpen(true)} className="p-2 text-[#1A1A1A] hover:text-[#B76E79] transition-colors">
               <Search size={19} />
             </button>
@@ -256,6 +238,13 @@ export default function Navbar() {
           </div>
 
         </div>
+
+        {/* Bottom Row: Desktop Navigation Links */}
+        <nav className="hidden md:flex justify-center pb-4">
+          <ul className="flex items-center gap-6 lg:gap-10">
+            {navLinks.map((link) => <NavItem key={link.href} link={link} pathname={pathname} />)}
+          </ul>
+        </nav>
       </header>
 
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
