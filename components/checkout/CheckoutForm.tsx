@@ -15,7 +15,7 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
 
   const subtotal = cartItems.reduce(
     (total: number, item: any) => total + item.price * item.quantity,
-    0
+    0,
   );
   const shipping = subtotal > 150 ? 0 : 15;
   const total = subtotal + shipping;
@@ -60,7 +60,9 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
       const data = await response.json();
 
       if (data.success) {
-        setMessage(`Order placed successfully! Your Order ID is ${data.orderNumber}`);
+        setMessage(
+          `Order placed successfully! Your Order ID is ${data.orderNumber}`,
+        );
         // If you have a clear cart function in your store, you can uncomment this:
         // (store as any).clearCart();
       } else {
@@ -84,17 +86,24 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
           <div className="flex items-center text-[11px] tracking-[0.1em] text-[#1A1A1A]/50 uppercase">
             <Lock size={12} className="mr-2" /> Secure Checkout
           </div>
-          <div className="text-sm text-[#1A1A1A]/70">Signed in as {userName}</div>
+          <div className="text-sm text-[#1A1A1A]/70">
+            Signed in as {userName}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
           <div className="lg:col-span-7">
             <div className="flex items-center space-x-2 text-[11px] uppercase tracking-[0.15em] text-[#1A1A1A]/50 mb-10">
-              <Link href="/cart" className="hover:text-[#B76E79] transition-colors">
+              <Link
+                href="/cart"
+                className="hover:text-[#B76E79] transition-colors"
+              >
                 Cart
               </Link>
               <ChevronRight size={12} />
-              <span className="text-[#1A1A1A] font-medium">Information & Shipping</span>
+              <span className="text-[#1A1A1A] font-medium">
+                Information & Shipping
+              </span>
               <ChevronRight size={12} />
               <span>Payment</span>
             </div>
@@ -215,11 +224,17 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
 
           <aside className="lg:col-span-5">
             <div className="rounded-3xl border border-[#1A1A1A]/10 bg-[#FFF8F2] p-6 shadow-sm">
-              <h2 className="text-lg font-medium text-[#1A1A1A] mb-4">Order summary</h2>
+              <h2 className="text-lg font-medium text-[#1A1A1A] mb-4">
+                Order summary
+              </h2>
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm text-[#1A1A1A]/70">
-                  <span>Items</span>
+                  <span>Unique Products</span>
                   <span>{cartItems.length}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-[#1A1A1A]/70">
+                  <span>Total Quantity</span>
+                  <span>{store.totalItems()}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-[#1A1A1A]/70">
                   <span>Subtotal</span>
@@ -227,7 +242,9 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
                 </div>
                 <div className="flex items-center justify-between text-sm text-[#1A1A1A]/70">
                   <span>Shipping</span>
-                  <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
+                  <span>
+                    {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                  </span>
                 </div>
                 <div className="border-t border-[#1A1A1A]/10 pt-4 flex items-center justify-between text-base font-semibold text-[#1A1A1A]">
                   <span>Total</span>
