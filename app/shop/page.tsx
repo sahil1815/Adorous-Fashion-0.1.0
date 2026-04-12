@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ProductGrid from "@/components/shop/ProductGrid";
+import ProductGrid from "@/components/shop/ProductGrid"; // or ProductGridClient if you use that here
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
 
@@ -8,14 +8,58 @@ export const metadata = {
   description: "Browse our complete collection of premium fashion pieces.",
 };
 
+// Helper to extract color from variant attributes
+function getColorFromVariant(variant: any): string {
+  const colorName = variant.attributes?.color || variant.attributes?.Color;
+  if (!colorName) return "#B0B0B0";
+
+  const colorMap: Record<string, string> = {
+    "Rose Gold": "#C5977D",
+    "Gold": "#C9A84C",
+    "Silver": "#B0B0B0",
+    "Champagne": "#F7E7CE",
+    "Black": "#1A1A1A",
+    "White": "#FFFFFF",
+  };
+
+  return colorMap[colorName] || "#B0B0B0";
+}
+
 export default async function ShopPage() {
   let products: any[] = [];
   let error: string | null = null;
 
   try {
     await dbConnect();
-    const data = await Product.find({}).lean();
-    products = data || [];
+    
+    // 1. Fetch products and POPULATE the category name
+    const data = await Product.find({ isActive: true })
+      .populate("category", "name")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // 2. Map the raw database fields to the exact format ProductCard expects
+    products = data.map((p: any) => ({
+      id: p._id.toString(),
+      slug: p.slug,
+      name: p.name,
+      // Fixes the weird ID string issue:
+      category: p.category?.name || "Uncategorized",
+      // Fixes the $NaN issue:
+      price: p.basePrice || 0,
+      compareAtPrice: p.compareAtPrice,
+      badge: p.isOnSale ? "sale" : undefined,
+      // Fixes the broken image issue:
+      images: {
+        primary: p.primaryImage || p.images?.[0] || { url: "/placeholder.jpg", alt: p.name },
+        hover: p.images?.[1] || undefined,
+      },
+      swatches: p.variants?.slice(0, 3).map((v: any) => ({
+        label: v.attributes?.color || v.attributes?.Color || "Default",
+        color: getColorFromVariant(v),
+      })) || [],
+    }));
+    
   } catch (err) {
     console.error("Error fetching products:", err);
     error = "Unable to load products. Please try again later.";
