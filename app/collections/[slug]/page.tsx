@@ -35,7 +35,7 @@ export default async function CollectionPage(
         
         <Link 
           href="/" 
-          className="inline-flex items-center text-[11px] uppercase tracking-widest text-[#1A1A1A]/50 hover:text-[#B76E79] transition-colors mb-8"
+          className="inline-flex relative z-20 items-center text-[11px] uppercase tracking-widest text-[#1A1A1A]/50 hover:text-[#B76E79] transition-colors mb-8"
         >
           <ArrowLeft size={14} className="mr-2" /> Home
         </Link>
