@@ -1,4 +1,5 @@
 // app/products/[slug]/page.tsx
+import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import connectDB from "@/lib/mongodb";
 import Product from "@/models/Product";
@@ -38,24 +39,8 @@ export default async function ProductDetailPage(props: Props) {
     .populate("category", "name slug")
     .lean();
 
-  // 🚨 DIAGNOSTIC MODE: Instead of a 404, tell us EXACTLY what is in the DB
-  if (!raw) {
-    const allProducts = await Product.find({}).select('name slug').limit(10).lean();
-    return (
-      <div className="pt-40 pb-20 px-10 text-center max-w-2xl mx-auto min-h-screen">
-        <h1 className="text-2xl text-red-600 mb-4 font-bold">Data Mismatch Detected</h1>
-        <p className="mb-2 text-lg">The URL searched for this exact slug:</p>
-        <code className="bg-gray-100 p-2 text-blue-600 font-bold rounded mb-8 block">
-          "{params.slug}"
-        </code>
-        
-        <p className="mb-2 text-lg">But your database currently contains these products:</p>
-        <div className="bg-gray-100 p-4 rounded text-left overflow-auto text-sm">
-          <pre>{JSON.stringify(allProducts, null, 2)}</pre>
-        </div>
-      </div>
-    );
-  }
+  // If it truly doesn't exist, show the standard 404 page
+  if (!raw) notFound();
 
   // 2. Bulletproof Category Fallback
   const categoryName = raw.category?.name || "Uncategorized";
@@ -109,52 +94,67 @@ export default async function ProductDetailPage(props: Props) {
   });
 
   return (
-    <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-40 pb-20">
-      
-      {/* ── Hero: gallery + info ─────────────────────────────────────────── */}
-      <section className="py-10 md:py-14">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start">
-          <div className="md:sticky md:top-24">
-            <ProductGallery images={galleryImages} productName={raw.name} />
-          </div>
-          <ProductInfo
-            id={raw._id.toString()}
-            slug={raw.slug}
-            name={raw.name}
-            shortDescription={raw.shortDescription}
-            description={raw.description}
-            category={category}
-            basePrice={raw.basePrice || 0}
-            compareAtPrice={raw.compareAtPrice}
-            currency="USD"
-            averageRating={raw.averageRating || 0}
-            reviewCount={raw.reviewCount || 0}
-            totalStock={raw.totalStock || 10}
-            variants={variants}
-            primaryImage={primaryImage}
-          />
-        </div>
-      </section>
+    // FIX: Added bg-white and min-h-screen to override system dark mode!
+    <main className="bg-white min-h-screen text-[#1A1A1A]">
+      <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-40 pb-20">
+        
+        {/* UI IMPROVEMENT: Added clean Breadcrumb Navigation */}
+        <nav className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-[#1A1A1A]/50 mb-8">
+          <a href="/" className="hover:text-[#B76E79] transition-colors">Home</a>
+          <span>/</span>
+          <a href="/shop" className="hover:text-[#B76E79] transition-colors">Shop</a>
+          <span>/</span>
+          <span className="text-[#1A1A1A] font-medium">{raw.name}</span>
+        </nav>
 
-      {/* ── Related products ─────────────────────────────────────────────── */}
-      {relatedProducts.length > 0 && (
-        <section className="py-14 border-t border-[#1A1A1A]/10 mt-10">
-          <div className="flex items-end justify-between mb-10">
-            <div>
-              <p className="text-[10px] tracking-[0.25em] uppercase text-[#B76E79] mb-2 font-medium">
-                You may also like
-              </p>
-              <h2
-                className="text-3xl font-light text-[#1A1A1A]"
-                style={{ fontFamily: "var(--font-serif)" }}
-              >
-                Complete the Look
-              </h2>
+        {/* ── Hero: gallery + info ─────────────────────────────────────────── */}
+        <section className="pb-10 md:pb-14">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start">
+            <div className="md:sticky md:top-32">
+              <ProductGallery images={galleryImages} productName={raw.name} />
+            </div>
+            
+            <div className="pt-2"> {/* Slight padding to align with image */}
+              <ProductInfo
+                id={raw._id.toString()}
+                slug={raw.slug}
+                name={raw.name}
+                shortDescription={raw.shortDescription}
+                description={raw.description}
+                category={category}
+                basePrice={raw.basePrice || 0}
+                compareAtPrice={raw.compareAtPrice}
+                currency="USD"
+                averageRating={raw.averageRating || 0}
+                reviewCount={raw.reviewCount || 0}
+                totalStock={raw.totalStock || 10}
+                variants={variants}
+                primaryImage={primaryImage}
+              />
             </div>
           </div>
-          <ProductGrid products={relatedProducts} columns={4} />
         </section>
-      )}
-    </div>
+
+        {/* ── Related products ─────────────────────────────────────────────── */}
+        {relatedProducts.length > 0 && (
+          <section className="py-14 border-t border-[#1A1A1A]/10 mt-6">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <p className="text-[10px] tracking-[0.25em] uppercase text-[#B76E79] mb-2 font-medium">
+                  You may also like
+                </p>
+                <h2
+                  className="text-3xl font-light text-[#1A1A1A]"
+                  style={{ fontFamily: "var(--font-serif)" }}
+                >
+                  Complete the Look
+                </h2>
+              </div>
+            </div>
+            <ProductGrid products={relatedProducts} columns={4} />
+          </section>
+        )}
+      </div>
+    </main>
   );
 }
