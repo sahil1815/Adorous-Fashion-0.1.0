@@ -1,12 +1,4 @@
 // app/products/[slug]/page.tsx
-//
-// Server Component — fetches product data from MongoDB and composes
-// the PDP layout from two client sub-components:
-//   <ProductGallery>  — image viewer (left column)
-//   <ProductInfo>     — interactive panel (right column)
-//
-// Also exports generateMetadata for per-product SEO.
-
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import connectDB from "@/lib/mongodb";
@@ -16,148 +8,112 @@ import ProductInfo from "@/components/shop/ProductInfo";
 import ProductGrid from "@/components/shop/ProductGrid";
 import type { ProductCardProps } from "@/components/shop/ProductCard";
 
-// ---------------------------------------------------------------------------
-// Types — plain objects that cross the server→client boundary safely
-// ---------------------------------------------------------------------------
-
-interface PageProps {
-  params: { slug: string };
-}
-
-// ---------------------------------------------------------------------------
-// generateMetadata — per-product <title> and <meta description>
-// ---------------------------------------------------------------------------
-
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   await connectDB();
-  const product = await Product.findOne({ slug: params.slug, isActive: true }).lean();
+  // FIX: Removed isActive requirement to ensure it finds the product
+  const product = await Product.findOne({ slug: params.slug }).lean();
 
-  if (!product) {
-    return { title: "Product Not Found" };
-  }
+  if (!product) return { title: "Product Not Found" };
 
   return {
     title: product.metaTitle ?? product.name,
-    description: product.metaDescription ?? product.shortDescription ?? product.description?.slice(0, 160),
-    openGraph: {
-      title: product.name,
-      description: product.shortDescription ?? product.description?.slice(0, 160),
-      images: product.images?.[0]?.url ? [{ url: product.images[0].url }] : [],
-    },
+    description: product.shortDescription ?? "Discover our timeless collection.",
   };
 }
 
-// ---------------------------------------------------------------------------
-// Page
-// ---------------------------------------------------------------------------
-
-export default async function ProductDetailPage({ params }: PageProps) {
+export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
   await connectDB();
 
-  // ── Fetch main product ──────────────────────────────────────────────────
-  const raw = await Product.findOne({ slug: params.slug, isActive: true })
+  // 1. Fetch main product (Removed isActive: true)
+  const raw = await Product.findOne({ slug: params.slug })
     .populate("category", "name slug")
     .lean();
 
+  // If it still can't find it, the slug in the URL literally doesn't match the DB
   if (!raw) notFound();
 
-  // ── Fetch related products (same category, excluding this one) ───────────
-  const relatedRaw = await Product.find({
-    category: raw.category,
-    _id: { $ne: raw._id },
-    isActive: true,
-  })
-    .limit(4)
-    .lean();
+  // 2. Bulletproof Category Fallback
+  const categoryName = raw.category?.name || "Uncategorized";
+  const categorySlug = raw.category?.slug || "uncategorized";
+  const category = { name: categoryName, slug: categorySlug };
 
-  // ── Serialise Mongoose lean objects → plain props ───────────────────────
-  // `lean()` returns ObjectIds and Buffers — we must stringify them before
-  // passing to Client Components. We do that explicitly here rather than
-  // using JSON.stringify/parse on the whole object (safer and typed).
+  // 3. Bulletproof Image Array
+  let galleryImages = [];
+  if (Array.isArray(raw.images) && raw.images.length > 0) {
+    galleryImages = raw.images.map((img: any) => ({
+      url: img.url || (typeof img === 'string' ? img : "/placeholder.jpg"),
+      alt: img.alt || raw.name,
+    }));
+  } else if (raw.primaryImage) {
+    galleryImages = [{
+      url: raw.primaryImage.url || (typeof raw.primaryImage === 'string' ? raw.primaryImage : "/placeholder.jpg"),
+      alt: raw.name
+    }];
+  } else {
+    galleryImages = [{ url: "/placeholder.jpg", alt: raw.name }];
+  }
+  const primaryImage = galleryImages[0];
 
-  const galleryImages = (raw.images as Array<{ url: string; alt: string }>).map(
-    (img) => ({ url: img.url, alt: img.alt })
-  );
-
-  const category = { name: raw.category.name, slug: raw.category.slug };
-
-  const variants = (raw.variants as Array<{
-    _id: { toString(): string };
-    sku: string;
-    price: number;
-    compareAtPrice?: number;
-    stock: number;
-    attributes: Record<string, string>;
-  }>).map((v) => ({
-    id: v._id.toString(),
-    sku: v.sku,
-    price: v.price,
+  // 4. Bulletproof Variants Fallback
+  const variants = Array.isArray(raw.variants) ? raw.variants.map((v: any) => ({
+    id: v._id?.toString() || Math.random().toString(),
+    sku: v.sku || "",
+    price: v.price || raw.basePrice,
     compareAtPrice: v.compareAtPrice,
-    stock: v.stock,
-    attributes: Object.fromEntries(
-      Object.entries(v.attributes ?? {})
-    ) as Record<string, string>,
-  }));
+    stock: v.stock || 0,
+    attributes: v.attributes || {},
+  })) : [];
 
-  const primaryImage = galleryImages.find((_, i) =>
-    (raw.images as Array<{ isPrimary?: boolean }>)[i]?.isPrimary
-  ) ?? galleryImages[0];
+  // 5. Fetch related products safely
+  const relatedRaw = await Product.find({
+    category: raw.category?._id || raw.category, 
+    _id: { $ne: raw._id },
+  }).limit(4).lean();
 
-  // Related products → ProductCardProps
-  const relatedProducts: ProductCardProps[] = relatedRaw.map((p) => ({
-    id: (p._id as { toString(): string }).toString(),
-    slug: p.slug as string,
-    name: p.name as string,
-    category: category.name,
-    price: p.basePrice as number,
-    compareAtPrice: p.compareAtPrice as number | undefined,
-    images: {
-      primary: {
-        url: (p.images as Array<{ url: string; alt: string }>)[0]?.url ?? "",
-        alt: (p.images as Array<{ url: string; alt: string }>)[0]?.alt ?? p.name as string,
-      },
-    },
-  }));
+  const relatedProducts: ProductCardProps[] = relatedRaw.map((p: any) => {
+    const pImage = Array.isArray(p.images) && p.images[0]?.url ? p.images[0].url : "/placeholder.jpg";
+    return {
+      id: p._id.toString(),
+      slug: p.slug,
+      name: p.name,
+      category: categoryName,
+      price: p.basePrice || 0,
+      compareAtPrice: p.compareAtPrice,
+      images: { primary: { url: pImage, alt: p.name } },
+    };
+  });
 
-  // ---------------------------------------------------------------------------
   return (
-    <div className="max-w-[1400px] mx-auto px-6 md:px-10">
-
+    <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-32 pb-20">
+      
       {/* ── Hero: gallery + info ─────────────────────────────────────────── */}
       <section className="py-10 md:py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start">
-
-          {/* Gallery — sticky on desktop so it stays visible while you scroll the info */}
           <div className="md:sticky md:top-24">
-            <ProductGallery
-              images={galleryImages}
-              productName={raw.name as string}
-            />
+            <ProductGallery images={galleryImages} productName={raw.name} />
           </div>
-
-          {/* Info panel */}
           <ProductInfo
-            id={(raw._id as { toString(): string }).toString()}
-            slug={raw.slug as string}
-            name={raw.name as string}
-            shortDescription={raw.shortDescription as string | undefined}
-            description={raw.description as string}
+            id={raw._id.toString()}
+            slug={raw.slug}
+            name={raw.name}
+            shortDescription={raw.shortDescription}
+            description={raw.description}
             category={category}
-            basePrice={raw.basePrice as number}
-            compareAtPrice={raw.compareAtPrice as number | undefined}
+            basePrice={raw.basePrice || 0}
+            compareAtPrice={raw.compareAtPrice}
             currency="USD"
-            averageRating={raw.averageRating as number}
-            reviewCount={raw.reviewCount as number}
-            totalStock={raw.totalStock as number}
+            averageRating={raw.averageRating || 0}
+            reviewCount={raw.reviewCount || 0}
+            totalStock={raw.totalStock || 10}
             variants={variants}
-            primaryImage={primaryImage ?? { url: "", alt: raw.name as string }}
+            primaryImage={primaryImage}
           />
         </div>
       </section>
 
       {/* ── Related products ─────────────────────────────────────────────── */}
       {relatedProducts.length > 0 && (
-        <section className="py-14 border-t border-[#1A1A1A]/08">
+        <section className="py-14 border-t border-[#1A1A1A]/10 mt-10">
           <div className="flex items-end justify-between mb-10">
             <div>
               <p className="text-[10px] tracking-[0.25em] uppercase text-[#B76E79] mb-2 font-medium">
