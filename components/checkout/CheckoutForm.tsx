@@ -238,17 +238,17 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
                 </div>
                 <div className="flex items-center justify-between text-sm text-[#1A1A1A]/70">
                   <span>Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>৳{subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-[#1A1A1A]/70">
                   <span>Shipping</span>
                   <span>
-                    {shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}
+                    {shipping === 0 ? "Free" : `৳${shipping.toFixed(2)}`}
                   </span>
                 </div>
                 <div className="border-t border-[#1A1A1A]/10 pt-4 flex items-center justify-between text-base font-semibold text-[#1A1A1A]">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>৳{total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
