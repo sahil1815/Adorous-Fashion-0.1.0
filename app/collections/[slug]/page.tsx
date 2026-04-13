@@ -80,7 +80,7 @@ export default async function CollectionPage(
                     )}
                   </div>
                   <h3 className="text-sm font-medium text-[#1A1A1A] tracking-wide">{product.name}</h3>
-                  <p className="text-sm text-[#1A1A1A]/70 mt-1">{(product.basePrice || 0).toFixed(2)}BDT</p>
+                  <p className="text-sm text-[#1A1A1A]/70 mt-1">{(product.basePrice || 0).toFixed(2)} &nbsp; BDT</p>
                 </Link>
               );
             })
