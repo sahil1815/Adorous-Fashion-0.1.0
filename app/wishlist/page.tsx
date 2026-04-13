@@ -42,7 +42,7 @@ export default function WishlistPage() {
               Your wishlist is currently empty.
             </p>
             <Link 
-              href="/collections/all" 
+              href="/shop" 
               className="bg-[#1A1A1A] text-white text-[11px] tracking-[0.2em] uppercase px-8 py-4 hover:bg-[#B76E79] transition-colors"
             >
               Continue Shopping
