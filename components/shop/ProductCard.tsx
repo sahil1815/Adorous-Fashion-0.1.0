@@ -23,7 +23,7 @@ export interface ProductCardProps {
   isWishlisted?: boolean;
   onWishlistToggle?: (id: string, wishlisted: boolean) => void;
   
-  // ADDED THESE BACK TO PREVENT VERCEL BUILD ERRORS:
+  // Kept here to prevent TypeScript errors from other pages
   badge?: string;
   swatches?: any[];
   currency?: string;
@@ -35,7 +35,7 @@ export interface ProductCardProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
-// Formats number to include ৳ and proper comma placement (South Asian numbering)
+// Formats number to include ৳ and proper comma placement
 function formatPrice(amount: number) {
   return "৳" + amount.toLocaleString("en-IN", {
     maximumFractionDigits: 0,
@@ -44,6 +44,21 @@ function formatPrice(amount: number) {
 
 function getSavingsPercent(price: number, compareAtPrice: number) {
   return Math.round(((compareAtPrice - price) / compareAtPrice) * 100);
+}
+
+// ---------------------------------------------------------------------------
+// Skeleton — THE MISSING PIECE!
+// ---------------------------------------------------------------------------
+export function ProductCardSkeleton() {
+  return (
+    <div className="flex flex-col border border-gray-100 bg-white animate-pulse">
+      <div className="aspect-square bg-gray-100" />
+      <div className="flex flex-col items-center justify-center p-4 md:p-5 gap-2">
+        <div className="h-3 w-3/4 bg-gray-200 rounded" />
+        <div className="h-4 w-1/2 bg-gray-200 rounded mt-1" />
+      </div>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -126,7 +141,7 @@ export default function ProductCard({
             size={16}
             className="transition-colors duration-200"
             fill={wishlisted ? "#B76E79" : "transparent"}
-            stroke={wishlisted ? "#B76E79" : "#9ca3af"} // Gray outline, brand color when active
+            stroke={wishlisted ? "#B76E79" : "#9ca3af"}
             strokeWidth={1.5}
           />
         </button>
