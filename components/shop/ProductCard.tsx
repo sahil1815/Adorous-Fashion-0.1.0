@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
 import { useWishlistStore } from "@/store/useWishlistStore";
 
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 export interface ProductCardProps {
   id: string;
   slug: string;
@@ -18,6 +21,9 @@ export interface ProductCardProps {
     hover?:  { url: string; alt: string };
   };
   
+  // --- ADDED THESE BACK TO FIX THE BUILD ERROR ---
+  isWishlisted?: boolean;
+  onWishlistToggle?: (id: string, wishlisted: boolean) => void;
   badge?: string;
   swatches?: any[];
   currency?: string;
@@ -49,22 +55,26 @@ export default function ProductCard(props: ProductCardProps) {
   const { id, slug, name, price, compareAtPrice, images } = props;
   const [hovered, setHovered] = useState(false);
   
-  // Connect to our new Wishlist Store
-  const { toggleWishlist, isInWishlist } = useWishlistStore();
+  // 1. ACTIVELY LISTEN TO THE WISHLIST ARRAY
+  const wishlistItems = useWishlistStore((state) => state.items);
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
+  
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     setIsHydrated(true); // Wait for local storage to load
   }, []);
 
-  const wishlisted = isHydrated ? isInWishlist(id) : false;
+  // 2. CHECK IF THIS SPECIFIC ITEM IS IN THE ARRAY
+  const wishlisted = isHydrated ? wishlistItems.some((item) => item.id === id) : false;
+  
   const onSale = !!(compareAtPrice && compareAtPrice > price);
   const savings = onSale && compareAtPrice ? getSavingsPercent(price, compareAtPrice) : 0;
 
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toggleWishlist(props); // Saves the entire product to the wishlist!
+    toggleWishlist(props);
   };
 
   return (
