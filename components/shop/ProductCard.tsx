@@ -22,6 +22,13 @@ export interface ProductCardProps {
   };
   isWishlisted?: boolean;
   onWishlistToggle?: (id: string, wishlisted: boolean) => void;
+  
+  // ADDED THESE BACK TO PREVENT VERCEL BUILD ERRORS:
+  badge?: string;
+  swatches?: any[];
+  currency?: string;
+  onQuickView?: (id: string) => void;
+  animationDelay?: number;
 }
 
 // ---------------------------------------------------------------------------
