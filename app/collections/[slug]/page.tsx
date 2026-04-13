@@ -51,7 +51,7 @@ export default async function CollectionPage(
   }));
 
   return (
-    <main className="min-h-screen bg-white pt-32 pb-24">
+    <main className="min-h-screen bg-white pt-32 md:pt-48 pb-24">
       <div className="max-w-[1400px] mx-auto px-6 md:px-10">
 
         <div className="text-center max-w-2xl mx-auto mb-16">

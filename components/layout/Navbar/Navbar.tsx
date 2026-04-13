@@ -120,7 +120,7 @@ function SearchOverlay({ onClose }: { onClose: () => void }) {
     }
   };
   return (
-    <div className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-200 mb-10">
+    <div className="fixed inset-0 z-[100] bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-200">
       <button
         onClick={onClose}
         className="absolute top-6 right-6 text-[#1A1A1A] hover:text-[#B76E79]"
