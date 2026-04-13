@@ -60,7 +60,7 @@ export default async function CollectionPage(
               const primaryImage = product.images?.[0]?.url || "";
               
               return (
-                <Link href={`/product/${product.slug}`} key={product._id.toString()} className="group cursor-pointer block">
+                <Link href={`/products/${product.slug}`} key={product._id.toString()} className="group cursor-pointer block">
                   <div className="aspect-[4/5] bg-gray-100 mb-4 overflow-hidden relative">
                     
                     {product.badge && (
