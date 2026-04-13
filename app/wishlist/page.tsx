@@ -20,13 +20,6 @@ export default function WishlistPage() {
   return (
     <main className="min-h-screen bg-white pt-32 pb-24">
       <div className="max-w-[1400px] mx-auto px-6 md:px-10">
-        
-        <Link 
-          href="/" 
-          className="inline-flex relative z-20 items-center text-[11px] uppercase tracking-widest text-[#1A1A1A]/50 hover:text-[#B76E79] transition-colors mb-8"
-        >
-          <ArrowLeft size={14} className="mr-2" /> Home
-        </Link>
 
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h1 
