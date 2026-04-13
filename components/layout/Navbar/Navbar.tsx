@@ -69,7 +69,6 @@ function NavItem({ link, pathname }: { link: NavLink; pathname: string }) {
         onClick={(e) => {
           if (link.children && link.children.length > 0) e.preventDefault();
         }}
-        // Added whitespace-nowrap here so text never breaks into two lines!
         className={`group flex items-center gap-0.5 text-[12px] lg:text-[13px] tracking-[0.12em] uppercase font-medium transition-colors duration-200 whitespace-nowrap ${isActive ? "text-[#B76E79]" : "text-[#1A1A1A] hover:text-[#B76E79]"}`}
       >
         {link.label}
@@ -344,6 +343,15 @@ export default function Navbar() {
             >
               <User size={19} />
             </Link>
+            
+            {/* ── THE NEW HEART ICON IS RIGHT HERE! ── */}
+            <Link
+              href="/wishlist"
+              className="flex p-2 text-[#1A1A1A] hover:text-[#B76E79] transition-colors"
+            >
+              <Heart size={19} />
+            </Link>
+
             <button
               onClick={toggleCart}
               className="relative p-2 text-[#1A1A1A] hover:text-[#B76E79] transition-colors"
