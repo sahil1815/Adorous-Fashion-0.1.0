@@ -5,10 +5,11 @@ import Image from 'next/image';
 export default function Hero() {
   return (
     <section className="relative min-h-screen w-full overflow-hidden bg-[#F7E7CE] flex flex-col justify-center">
-      {/* pt-[140px] ensures we clear the Navbar on mobile.
-          md:pt-0 resets it for desktop side-by-side layout.
+      
+      {/* FIX: Changed md:pt-0 to md:pt-[180px]! 
+        This perfectly clears your 2-row desktop Navbar so it never overlaps the image.
       */}
-      <div className="container mx-auto flex h-full flex-col items-center justify-center px-6 pt-[140px] md:pt-0 md:flex-row gap-10 md:gap-0">
+      <div className="container mx-auto flex h-full flex-col items-center justify-center px-6 pt-[140px] md:pt-[180px] md:flex-row gap-10 md:gap-10 lg:gap-16">
         
         {/* Text Content */}
         <div className="z-10 w-full text-center md:w-1/2 md:text-left animate-in fade-in slide-in-from-bottom-5 duration-1000">
