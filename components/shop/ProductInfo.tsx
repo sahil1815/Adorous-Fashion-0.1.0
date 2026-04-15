@@ -5,21 +5,9 @@
  *
  * The right-hand panel on the Product Detail Page.
  * All interactive — swatches, quantity, add-to-cart, wishlist, accordion.
- *
- * Features:
- *  - Breadcrumb navigation
- *  - Star rating display
- *  - Price with sale / compareAtPrice
- *  - Color swatches with variant switching
- *  - Quantity stepper (1–99)
- *  - Add to Cart with animated feedback
- *  - Wishlist toggle
- *  - Share button (Web Share API with clipboard fallback)
- *  - Product details / care / shipping accordion
- *  - Trust badges row
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import {
   Heart,
@@ -35,6 +23,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
+import { useWishlistStore } from "@/store/useWishlistStore"; // <-- ADDED THIS FOR WISHLIST!
 import ProductAccordion from "@/components/shop/ProductAccordion";
 import type { AccordionItem } from "@/components/shop/ProductAccordion";
 
@@ -147,11 +136,21 @@ export default function ProductInfo({
     colorVariants[0] ?? null
   );
   const [quantity, setQuantity]     = useState(1);
-  const [wishlisted, setWishlisted] = useState(false);
   const [added, setAdded]           = useState(false);
   const [shared, setShared]         = useState(false);
 
   const { addItem, openCart } = useCartStore();
+  
+  // ── 5. FIXED WISHLIST LOGIC ───────────────────────────────────────────────
+  const wishlistItems = useWishlistStore((state) => state.items);
+  const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const wishlisted = isHydrated ? wishlistItems.some((item) => item.id === id) : false;
 
   // Active price (variant overrides base)
   const activePrice       = selectedVariant?.price       ?? basePrice;
@@ -161,6 +160,18 @@ export default function ProductInfo({
   const isSoldOut         = activeStock === 0;
   const savingsPct        = onSale && activeCompare ? getSavings(activePrice, activeCompare) : 0;
   const lowStock          = activeStock > 0 && activeStock <= 5;
+
+  const handleWishlist = useCallback(() => {
+    toggleWishlist({
+      id,
+      slug,
+      name,
+      category: category.name,
+      price: activePrice,
+      compareAtPrice: activeCompare,
+      images: { primary: primaryImage },
+    });
+  }, [id, slug, name, category.name, activePrice, activeCompare, primaryImage, toggleWishlist]);
 
   // ── Add to cart ───────────────────────────────────────────────────────────
   const handleAddToCart = useCallback(() => {
@@ -223,18 +234,19 @@ export default function ProductInfo({
     },
     {
       id: "shipping",
-      label: "Shipping & Returns",
+      label: "Shipping & Exchanges", // Updated title
       content: (
         <div className="space-y-2">
-          <p>Complimentary standard shipping on orders over $150.</p>
-          <p>Express delivery (2–3 business days) available at checkout.</p>
-          <p>Free returns within 30 days — no questions asked.</p>
+          {/* 3 & 4. UPDATED FANCY TEXT AND ৳2000 THRESHOLD */}
+          <p>Complimentary standard shipping on all orders over ৳2000.</p>
+          <p>Express delivery (2–3 business days) is available at checkout.</p>
+          <p>We gladly offer exchanges within 30 days of purchase, provided the piece remains in its pristine, original condition.</p>
           <p className="mt-3">
             <Link
               href="/returns"
               className="underline underline-offset-2 hover:text-[#B76E79] transition-colors"
             >
-              View full returns policy →
+              View full exchange policy →
             </Link>
           </p>
         </div>
@@ -439,9 +451,9 @@ export default function ProductInfo({
             : <><ShoppingBag size={14} strokeWidth={1.8} /> Add to Bag</>}
         </button>
 
-        {/* Wishlist */}
+        {/* 5. FIXED WISHLIST BUTTON */}
         <button
-          onClick={() => setWishlisted((w) => !w)}
+          onClick={handleWishlist}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
           aria-pressed={wishlisted}
           className={`
@@ -483,8 +495,9 @@ export default function ProductInfo({
       {/* ── Trust badges ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-3 py-4 border-y border-[#1A1A1A]/08">
         {[
-          { icon: <Truck size={15} strokeWidth={1.5} />,       label: "Free shipping", sub: "on orders over $150" },
-          { icon: <RotateCcw size={15} strokeWidth={1.5} />,   label: "Free returns",  sub: "within 30 days" },
+          // 1 & 2. UPDATED BADGE TEXT AND THRESHOLDS
+          { icon: <Truck size={15} strokeWidth={1.5} />,       label: "Free shipping", sub: "on orders over ৳2000" },
+          { icon: <RotateCcw size={15} strokeWidth={1.5} />,   label: "Exchanges",     sub: "Available within 30 days" },
           { icon: <ShieldCheck size={15} strokeWidth={1.5} />, label: "Authentic",     sub: "guaranteed" },
         ].map(({ icon, label, sub }) => (
           <div key={label} className="flex flex-col items-center text-center gap-1.5">
