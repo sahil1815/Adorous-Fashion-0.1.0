@@ -15,6 +15,12 @@ const UserSchema = new Schema(
       lowercase: true,
       trim: true,
     },
+    // ADDED PHONE FIELD HERE
+    phone: {
+      type: String,
+      required: [true, "Phone number is required"],
+      trim: true,
+    },
     passwordHash: {
       type: String,
       required: [true, "Password hash is required"],

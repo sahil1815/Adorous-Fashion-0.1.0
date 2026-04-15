@@ -7,11 +7,14 @@ export async function POST(request: Request) {
   try {
     await connectDB();
     const body = await request.json();
-    const { name, email, password } = body;
+    
+    // 1. ADD PHONE TO DESTRUCTURING
+    const { name, email, phone, password } = body;
 
-    if (!name || !email || !password) {
+    // 2. REQUIRE PHONE IN VALIDATION
+    if (!name || !email || !phone || !password) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: "Name, email, phone number, and password are required" },
         { status: 400 }
       );
     }
@@ -24,9 +27,11 @@ export async function POST(request: Request) {
       );
     }
 
+    // 3. SAVE PHONE TO DATABASE
     const user = await User.create({
       name: name.trim(),
       email: email.toLowerCase().trim(),
+      phone: phone.trim(),
       passwordHash: hashPassword(password),
     });
 
@@ -42,6 +47,7 @@ export async function POST(request: Request) {
           id: user._id.toString(),
           name: user.name,
           email: user.email,
+          phone: user.phone, // Optional: send it back to the client
           role: user.role,
         },
       },
