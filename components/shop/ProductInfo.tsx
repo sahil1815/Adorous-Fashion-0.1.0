@@ -65,7 +65,7 @@ export interface ProductInfoProps {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatPrice(amount: number) {
+function formatPrice(amount: number, currency?: string) {
   return "৳" + amount.toLocaleString("en-IN", {
     maximumFractionDigits: 0,
   });
