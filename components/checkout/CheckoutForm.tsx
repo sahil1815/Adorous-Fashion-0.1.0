@@ -264,10 +264,10 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
                     </p>
                     <div className="inline-block rounded-sm bg-[#F7E7CE]/20 px-2.5 py-1.5 border border-[#F7E7CE]/50">
                       <p className="text-[9px] uppercase tracking-[0.1em] text-[#1A1A1A]/70 font-medium">
-                        Inside Dhaka:{"৳80"}
+                        Inside Dhaka:{" "}
                         <span className="text-[#B76E79] font-bold">৳80</span>
                         <span className="mx-1.5 text-[#1A1A1A]/20">|</span>
-                        Outside Dhaka:{"৳130"}
+                        Outside Dhaka:{" "}
                         <span className="text-[#B76E79] font-bold">৳130</span>
                       </p>
                     </div>
