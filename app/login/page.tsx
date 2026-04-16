@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 
-// 1. We create an inner component to handle the smart routing logic safely
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   
-  // ✅ SMART REDIRECT LOGIC: Check the URL for a destination, default to /account
+  // Check the URL for a destination, default to /account
   const redirectTo = searchParams.get("redirectTo") || "/account";
   
   const [identifier, setIdentifier] = useState("");
@@ -34,15 +32,16 @@ function LoginForm() {
       const data = await response.json();
       if (!response.ok) {
         setError(data.error || "Invalid credentials. Please try again.");
+        setIsSubmitting(false); // Make sure to stop the loading state if there's an error
         return;
       }
 
-      // ✅ Instantly push them to their destination
-      router.push(redirectTo);
-      router.refresh(); 
+      // ✅ THE FIX: Force a hard browser navigation.
+      // This forces Next.js to clear its cache and read the new login cookie from the server.
+      window.location.href = redirectTo;
+      
     } catch (err) {
       setError("Unable to sign in. Please try again.");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -130,7 +129,6 @@ function LoginForm() {
   );
 }
 
-// 2. The main page component wraps the form in a Suspense boundary for Next.js safety
 export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#F7E7CE]/30 pt-[140px] md:pt-[180px] pb-24 px-6 flex items-center justify-center">
