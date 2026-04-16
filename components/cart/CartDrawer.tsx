@@ -18,7 +18,6 @@
  * - Fully accessible: focus-trap, aria labels, role="dialog"
  */
 
-// ADDED useState HERE!
 import { useEffect, useRef, useCallback, useState } from "react";
 import Link from "next/link";
 import { X, ShoppingBag, ChevronRight, Tag } from "lucide-react";
@@ -148,7 +147,6 @@ function ShippingProgress({ subtotal }: { subtotal: number }) {
 // ---------------------------------------------------------------------------
 
 export default function CartDrawer() {
-  // 1. ADDED MOUNT CHECK STATE
   const [isMounted, setIsMounted] = useState(false);
   
   useEffect(() => {
@@ -167,9 +165,6 @@ export default function CartDrawer() {
 
   const drawerRef   = useRef<HTMLDivElement>(null);
   const closeRef    = useRef<HTMLButtonElement>(null);
-
-  // 2. ADDED EARLY RETURN TO PREVENT HYDRATION CRASH
-  if (!isMounted) return null;
 
   const subtotal   = totalPrice();
   const itemCount  = totalItems();
@@ -208,6 +203,9 @@ export default function CartDrawer() {
       updateQuantity(id, qty, variantId),
     [updateQuantity]
   );
+
+  // ✅ FIX: The early return is now safely placed AFTER all hooks!
+  if (!isMounted) return null;
 
   return (
     <>
