@@ -6,19 +6,20 @@
  * A full-height slide-in cart panel that opens from the right.
  *
  * Features:
- *  - Smooth slide + backdrop fade transition
- *  - Three states: loading skeleton, empty, populated
- *  - Per-item quantity stepper + remove
- *  - Order summary: subtotal, shipping threshold, savings
- *  - Free-shipping progress bar
- *  - Promo code input (UI only — wire to API when ready)
- *  - Checkout CTA + "Continue Shopping" link
- *  - Body scroll lock while open
- *  - Closes on Escape key and backdrop click
- *  - Fully accessible: focus-trap, aria labels, role="dialog"
+ * - Smooth slide + backdrop fade transition
+ * - Three states: loading skeleton, empty, populated
+ * - Per-item quantity stepper + remove
+ * - Order summary: subtotal, shipping threshold, savings
+ * - Free-shipping progress bar
+ * - Promo code input (UI only — wire to API when ready)
+ * - Checkout CTA + "Continue Shopping" link
+ * - Body scroll lock while open
+ * - Closes on Escape key and backdrop click
+ * - Fully accessible: focus-trap, aria labels, role="dialog"
  */
 
-import { useEffect, useRef, useCallback } from "react";
+// ADDED useState HERE!
+import { useEffect, useRef, useCallback, useState } from "react";
 import Link from "next/link";
 import { X, ShoppingBag, ChevronRight, Tag } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
@@ -147,6 +148,13 @@ function ShippingProgress({ subtotal }: { subtotal: number }) {
 // ---------------------------------------------------------------------------
 
 export default function CartDrawer() {
+  // 1. ADDED MOUNT CHECK STATE
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const {
     items,
     isOpen,
@@ -159,6 +167,9 @@ export default function CartDrawer() {
 
   const drawerRef   = useRef<HTMLDivElement>(null);
   const closeRef    = useRef<HTMLButtonElement>(null);
+
+  // 2. ADDED EARLY RETURN TO PREVENT HYDRATION CRASH
+  if (!isMounted) return null;
 
   const subtotal   = totalPrice();
   const itemCount  = totalItems();
