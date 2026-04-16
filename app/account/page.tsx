@@ -9,6 +9,32 @@ import { ShoppingBag, LogOut, Package } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
+// ✅ Helper function to give every single status a clear, distinct, visible color
+const getStatusBadgeStyles = (status: string) => {
+  switch (status) {
+    case "pending":
+    case "paid":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    case "processing":
+      return "bg-orange-100 text-orange-800 border-orange-200";
+    case "accepted":
+      return "bg-indigo-100 text-indigo-800 border-indigo-200"; // Deep blue/purple
+    case "in_transit":
+    case "shipped":
+      return "bg-blue-100 text-blue-800 border-blue-200"; // Bright blue
+    case "ready_for_delivery":
+      return "bg-purple-100 text-purple-800 border-purple-200"; // Distinct purple
+    case "delivered":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "returned":
+    case "cancelled":
+    case "refunded":
+      return "bg-red-100 text-red-800 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
+
 export default async function AccountPage() {
   const sessionUser = await getCurrentUser();
   if (!sessionUser) {
@@ -25,21 +51,17 @@ export default async function AccountPage() {
     .sort({ createdAt: -1 })
     .lean();
 
-  // Get user's initials for the Avatar
   const initial = dbUser?.name?.charAt(0).toUpperCase() || sessionUser.name?.charAt(0).toUpperCase() || "U";
 
   return (
-    // Clean, bright, soft background color
-    <main className="min-h-screen bg-[#FCFBFA] pt-32 md:pt-50 pb-24 px-4 sm:px-6">
+    <main className="min-h-screen bg-[#FCFBFA] pt-32 md:pt-40 pb-24 px-4 sm:px-6">
       <div className="mx-auto w-full max-w-6xl">
         
         <div className="flex flex-col md:flex-row gap-8">
           
-          {/* LEFT SIDEBAR: User Profile & Navigation */}
+          {/* LEFT SIDEBAR */}
           <div className="w-full md:w-1/3 lg:w-1/4 flex flex-col gap-6">
-            
             <div className="bg-white rounded-[20px] p-8 shadow-sm border border-gray-100 flex flex-col items-center text-center">
-              {/* Avatar Circle */}
               <div className="w-24 h-24 rounded-full bg-[#F7E7CE]/40 text-[#B76E79] flex items-center justify-center text-3xl mb-4" style={{ fontFamily: "var(--font-serif)" }}>
                 {initial}
               </div>
@@ -52,7 +74,6 @@ export default async function AccountPage() {
 
               <div className="w-full h-px bg-gray-100 mb-6"></div>
 
-              {/* Navigation Links */}
               <div className="w-full space-y-3">
                 <Link
                   href="/shop"
@@ -72,20 +93,17 @@ export default async function AccountPage() {
                 </form>
               </div>
             </div>
-
           </div>
 
-          {/* RIGHT COLUMN: Main Content */}
+          {/* RIGHT COLUMN */}
           <div className="w-full md:w-2/3 lg:w-3/4 flex flex-col gap-8">
             
-            {/* 1. Personal Information Component */}
             <ProfileClient user={{
               name: dbUser?.name,
               email: dbUser?.email,
               phone: dbUser?.phone 
             }} />
 
-            {/* 2. Order History Box */}
             <div className="bg-white rounded-[20px] p-6 sm:p-8 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-8">
                 <Package className="text-gray-400" size={20} />
@@ -123,21 +141,20 @@ export default async function AccountPage() {
                         const date = new Date(order.createdAt).toLocaleDateString("en-US", {
                           month: "short", day: "numeric", year: "numeric"
                         });
+                        
                         const currentStatus = order.status || "pending";
+                        const badgeStyle = getStatusBadgeStyles(currentStatus);
+                        // ✅ This removes underscores so "in_transit" becomes "in transit"
+                        const displayStatus = currentStatus.replace(/_/g, ' '); 
                         
                         return (
                           <tr key={order._id.toString()} className="hover:bg-gray-50/50 transition-colors">
                             <td className="py-5 font-medium text-[#1A1A1A] px-2">{order.orderNumber}</td>
                             <td className="py-5 text-gray-500 px-2">{date}</td>
                             <td className="py-5 px-2">
-                              <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider
-                                ${currentStatus === 'pending' || currentStatus === 'paid' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' : ''}
-                                ${currentStatus === 'processing' ? 'bg-orange-50 text-orange-700 border border-orange-100' : ''}
-                                ${currentStatus === 'shipped' ? 'bg-blue-50 text-blue-700 border border-blue-100' : ''}
-                                ${currentStatus === 'delivered' ? 'bg-green-50 text-green-700 border border-green-100' : ''}
-                                ${currentStatus === 'cancelled' || currentStatus === 'refunded' ? 'bg-red-50 text-red-700 border border-red-100' : ''}
-                              `}>
-                                {currentStatus}
+                              {/* ✅ The span now uses the dynamic badge styles */}
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border ${badgeStyle}`}>
+                                {displayStatus}
                               </span>
                             </td>
                             <td className="py-5 text-right font-medium text-[#1A1A1A] px-2">
