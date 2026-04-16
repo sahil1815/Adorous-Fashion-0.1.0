@@ -9,10 +9,8 @@ export default function RegisterPage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  // New Phone state with +880 default
   const [phone, setPhone] = useState("+880");
   const [password, setPassword] = useState("");
-  // New Confirm Password state
   const [confirmPassword, setConfirmPassword] = useState("");
   
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +21,18 @@ export default function RegisterPage() {
     setIsSubmitting(true);
     setError(null);
 
-    // Validate passwords match before sending to server
+    // 1. VALIDATE PHONE NUMBER
+    // This removes any spaces or dashes the user might have typed
+    const cleanedPhone = phone.replace(/[\s-]/g, "");
+    
+    // This checks if the number starts with +880 AND is followed by exactly 10 digits
+    if (!/^\+880\d{10}$/.test(cleanedPhone)) {
+      setError("The phone number you typed is incorrect. Please enter a complete valid number.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // 2. VALIDATE PASSWORDS MATCH
     if (password !== confirmPassword) {
       setError("Passwords do not match. Please try again.");
       setIsSubmitting(false);
@@ -34,8 +43,8 @@ export default function RegisterPage() {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // Sending phone to the database
-        body: JSON.stringify({ name, email, phone, password }),
+        // Send the nicely cleaned phone number to the database!
+        body: JSON.stringify({ name, email, phone: cleanedPhone, password }),
       });
 
       const data = await response.json();
@@ -53,16 +62,14 @@ export default function RegisterPage() {
   };
 
   return (
-    // Fixed Overlap: pt-[140px] md:pt-[180px] pushes it below the Navbar safely
     <main className="min-h-screen bg-[#F7E7CE]/30 pt-[140px] md:pt-[180px] pb-24 px-6 flex items-center justify-center">
       
-      {/* Fixed Layout: Split-screen card for large displays */}
       <div className="w-full max-w-5xl bg-white rounded-sm shadow-xl flex overflow-hidden min-h-[650px] border border-[#F7E7CE]">
         
         {/* Left Side: Image (Hidden on mobile) */}
         <div className="hidden md:block w-1/2 relative bg-[#E5D5BC]">
           <Image 
-            src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80&w=1000" 
+            src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=1000" 
             alt="Adorous Luxury Jewelry" 
             fill 
             className="object-cover mix-blend-multiply opacity-90"
@@ -93,7 +100,7 @@ export default function RegisterPage() {
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="e.g., Adorous Fashion"
+                placeholder="e.g., Jane Doe"
                 required
                 className="mt-2 w-full rounded-sm border border-[#D8C2B6] bg-transparent px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-[#B76E79] placeholder:text-gray-300"
               />
@@ -105,13 +112,12 @@ export default function RegisterPage() {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="e.g., adorous.fashion@gmail.com"
+                placeholder="e.g., jane@example.com"
                 required
                 className="mt-2 w-full rounded-sm border border-[#D8C2B6] bg-transparent px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-[#B76E79] placeholder:text-gray-300"
               />
             </label>
 
-            {/* Added Phone Field */}
             <label className="block text-[12px] uppercase tracking-[0.1em] font-medium text-[#1A1A1A]/70">
               Phone Number
               <input
@@ -138,7 +144,6 @@ export default function RegisterPage() {
                 />
               </label>
 
-              {/* Added Confirm Password Field */}
               <label className="block text-[12px] uppercase tracking-[0.1em] font-medium text-[#1A1A1A]/70">
                 Confirm Password
                 <input
