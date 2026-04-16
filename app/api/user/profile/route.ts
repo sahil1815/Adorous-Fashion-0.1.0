@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
+import Notification from "@/models/Notification"; // <-- Import our new alert system
 import { getCurrentUser } from "@/lib/session";
 
 export async function PUT(request: Request) {
   try {
-    // 1. Verify the user is actually logged in
     const sessionUser = await getCurrentUser();
     if (!sessionUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -19,28 +19,59 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
 
-    // 2. Make sure the new email isn't already taken by another account
+    const cleanEmail = email.toLowerCase().trim();
+    const cleanName = name.trim();
+    const cleanPhone = phone.trim();
+
+    // Make sure the new email isn't already taken
     const existingEmail = await User.findOne({ 
-      email: email.toLowerCase().trim(), 
-      _id: { $ne: sessionUser.id } // Exclude the current user from this check
+      email: cleanEmail, 
+      _id: { $ne: sessionUser.id } 
     });
     
     if (existingEmail) {
       return NextResponse.json({ error: "This email is already in use by another account." }, { status: 409 });
     }
 
-    // 3. Update the database
+    // 1. Fetch the OLD user data before we change it
+    const oldUser = await User.findById(sessionUser.id);
+    if (!oldUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // 2. Figure out exactly what changed
+    let changes: string[] = [];
+    if (oldUser.name !== cleanName) {
+      changes.push(`Name from '${oldUser.name}' to '${cleanName}'`);
+    }
+    if (oldUser.email !== cleanEmail) {
+      changes.push(`Email from '${oldUser.email}' to '${cleanEmail}'`);
+    }
+    // Note: older accounts might not have a phone number yet, so we account for undefined
+    if ((oldUser.phone || "") !== cleanPhone) {
+      changes.push(`Phone from '${oldUser.phone || "None"}' to '${cleanPhone}'`);
+    }
+
+    // 3. Update the database with the new data
     const updatedUser = await User.findByIdAndUpdate(
       sessionUser.id,
-      {
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
-        phone: phone.trim(),
-      },
-      { new: true } // Return the updated document
+      { name: cleanName, email: cleanEmail, phone: cleanPhone },
+      { new: true }
     );
 
-    // [STEP 3 PLACEHOLDER: We will add the Admin Notification code right here in the next step!]
+    // 4. STEP 3 MAGIC: If there were changes, create an Admin Notification!
+    if (changes.length > 0) {
+      const changeMessage = `User ${oldUser.name} (${oldUser.email}) updated their profile. Changes made: ${changes.join(" | ")}.`;
+      
+      await Notification.create({
+        title: "User Profile Updated",
+        message: changeMessage,
+        type: "profile_update"
+      });
+
+      // (Optional Note: If you eventually want to send an email to the admin, 
+      // you would put your Nodemailer or Resend code right here!)
+    }
 
     return NextResponse.json({ 
       message: "Profile updated successfully", 
