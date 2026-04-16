@@ -54,7 +54,7 @@ export default function LoginPage() {
         <div className="hidden md:block w-1/2 relative bg-[#E5D5BC]">
           <Image 
             // Using a different but matching beautiful jewelry image for the login page
-            src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&q=80&w=1000" 
+            src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&q=80&w=1000" 
             alt="Adorous Luxury Jewelry" 
             fill 
             className="object-cover mix-blend-multiply opacity-90"
@@ -87,7 +87,7 @@ export default function LoginPage() {
                 type="text"
                 value={identifier}
                 onChange={(event) => setIdentifier(event.target.value)}
-                placeholder="jane@example.com or +880..."
+                placeholder="adorous.fashion@gmail.com or +880..."
                 required
                 className="mt-2 w-full rounded-sm border border-[#D8C2B6] bg-transparent px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-[#B76E79] placeholder:text-gray-300"
               />
