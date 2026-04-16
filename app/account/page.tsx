@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import LogoutButton from "./LogoutButton";
 import { getCurrentUser } from "@/lib/session";
 import connectDB from "@/lib/mongodb";
 import Order from "@/models/Order";
@@ -82,15 +83,7 @@ export default async function AccountPage() {
                   <ShoppingBag size={14} />
                   Continue shopping
                 </Link>
-                <form action="/api/auth/logout" method="post">
-                  <button
-                    type="submit"
-                    className="flex items-center justify-center gap-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-[11px] uppercase tracking-wider font-semibold text-gray-600 transition hover:bg-gray-50"
-                  >
-                    <LogOut size={14} />
-                    Sign out
-                  </button>
-                </form>
+                <LogoutButton />
               </div>
             </div>
           </div>
