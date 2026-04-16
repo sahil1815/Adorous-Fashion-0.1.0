@@ -37,7 +37,6 @@ export async function PATCH(
     const { id } = await props.params;
 
     // --- NEW SECURITY CHECK FOR STATUS UPDATES ---
-    // If the request includes a status update, validate it against our exact stages
     if (body.status) {
       const validStatuses = [
         "processing", 
@@ -45,7 +44,8 @@ export async function PATCH(
         "in_transit", 
         "ready_for_delivery", 
         "delivered", 
-        "returned"
+        "returned",
+        "cancelled" // ✅ Added Cancelled here!
       ];
       
       if (!validStatuses.includes(body.status)) {

@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Package, CreditCard, Truck, ChevronDown } from "lucide-react";
 
-// The precise lifecycle stages for your orders
+// ✅ Added "Cancelled" to the options
 const STATUS_OPTIONS = [
   { value: "processing", label: "Processing" },
   { value: "accepted", label: "Accepted" },
@@ -14,7 +14,23 @@ const STATUS_OPTIONS = [
   { value: "ready_for_delivery", label: "Ready For Delivery" },
   { value: "delivered", label: "Delivered" },
   { value: "returned", label: "Returned" },
+  { value: "cancelled", label: "Cancelled" }, 
 ];
+
+// ✅ Helper function to determine the color based on the status
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "delivered":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "cancelled":
+      return "bg-red-100 text-red-800 border-red-200";
+    case "returned":
+      return "bg-slate-100 text-slate-800 border-slate-300";
+    default:
+      // Your default elegant colors for active processing stages
+      return "bg-[#F7E7CE]/30 text-[#1A1A1A] border-[#F7E7CE]";
+  }
+};
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -40,11 +56,9 @@ export default function OrderDetailsPage() {
     fetchOrder();
   }, [id]);
 
-  // Handle the dropdown change
   const handleStatusChange = async (newStatus: string) => {
     setIsUpdatingStatus(true);
     try {
-      // Step 2: We will build this API route next!
       const res = await fetch(`/api/orders/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -55,7 +69,6 @@ export default function OrderDetailsPage() {
         throw new Error("Failed to update status");
       }
 
-      // If successful, instantly update the UI so you don't have to refresh
       setOrder({ ...order, status: newStatus });
     } catch (error) {
       alert("Failed to update order status. Please try again.");
@@ -89,13 +102,14 @@ export default function OrderDetailsPage() {
           </p>
         </div>
         
-        {/* THE NEW INTERACTIVE STATUS DROPDOWN */}
+        {/* THE INTERACTIVE STATUS DROPDOWN (Now with dynamic colors!) */}
         <div className="relative flex items-center">
           <select
             value={order.status}
             onChange={(e) => handleStatusChange(e.target.value)}
             disabled={isUpdatingStatus}
-            className="appearance-none px-5 py-2.5 pr-10 bg-[#F7E7CE]/30 text-[#1A1A1A] text-[11px] tracking-widest uppercase font-semibold border border-[#F7E7CE] outline-none focus:border-[#B76E79] cursor-pointer disabled:opacity-50 transition-colors"
+            // ✅ We inject the dynamic color function directly into the className
+            className={`appearance-none px-5 py-2.5 pr-10 text-[11px] tracking-widest uppercase font-semibold border outline-none cursor-pointer disabled:opacity-50 transition-colors ${getStatusColor(order.status)}`}
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -103,7 +117,7 @@ export default function OrderDetailsPage() {
               </option>
             ))}
           </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-[#1A1A1A]">
+          <div className={`pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 ${order.status === 'delivered' || order.status === 'returned' || order.status === 'cancelled' ? 'opacity-60' : 'text-[#1A1A1A]'}`}>
             <ChevronDown size={14} />
           </div>
         </div>
