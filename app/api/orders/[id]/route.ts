@@ -35,10 +35,38 @@ export async function PATCH(
     const body = await request.json();
     
     const { id } = await props.params;
+
+    // --- NEW SECURITY CHECK FOR STATUS UPDATES ---
+    // If the request includes a status update, validate it against our exact stages
+    if (body.status) {
+      const validStatuses = [
+        "processing", 
+        "accepted", 
+        "in_transit", 
+        "ready_for_delivery", 
+        "delivered", 
+        "returned"
+      ];
+      
+      if (!validStatuses.includes(body.status)) {
+        return NextResponse.json(
+          { error: "Invalid status update. Must be a valid lifecycle stage." }, 
+          { status: 400 }
+        );
+      }
+    }
+    // ---------------------------------------------
     
+    // Update the order with the validated body
     const order = await Order.findByIdAndUpdate(id, body, { new: true });
+    
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
     return NextResponse.json({ success: true, order }, { status: 200 });
   } catch (error) {
+    console.error("Error updating order:", error);
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
   }
 }

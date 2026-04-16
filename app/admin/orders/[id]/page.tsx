@@ -4,7 +4,17 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Package, CreditCard, Truck } from "lucide-react";
+import { ArrowLeft, Package, CreditCard, Truck, ChevronDown } from "lucide-react";
+
+// The precise lifecycle stages for your orders
+const STATUS_OPTIONS = [
+  { value: "processing", label: "Processing" },
+  { value: "accepted", label: "Accepted" },
+  { value: "in_transit", label: "In Transit" },
+  { value: "ready_for_delivery", label: "Ready For Delivery" },
+  { value: "delivered", label: "Delivered" },
+  { value: "returned", label: "Returned" },
+];
 
 export default function OrderDetailsPage() {
   const params = useParams();
@@ -12,6 +22,7 @@ export default function OrderDetailsPage() {
   
   const [order, setOrder] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -28,6 +39,31 @@ export default function OrderDetailsPage() {
     };
     fetchOrder();
   }, [id]);
+
+  // Handle the dropdown change
+  const handleStatusChange = async (newStatus: string) => {
+    setIsUpdatingStatus(true);
+    try {
+      // Step 2: We will build this API route next!
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to update status");
+      }
+
+      // If successful, instantly update the UI so you don't have to refresh
+      setOrder({ ...order, status: newStatus });
+    } catch (error) {
+      alert("Failed to update order status. Please try again.");
+      console.error(error);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
 
   if (isLoading) {
     return <div className="p-10 text-center text-[#1A1A1A]/50">Loading order details...</div>;
@@ -52,9 +88,26 @@ export default function OrderDetailsPage() {
             Placed on {new Date(order.createdAt).toLocaleDateString()}
           </p>
         </div>
-        <div className="px-4 py-2 bg-[#F7E7CE]/30 text-[#1A1A1A] text-xs tracking-widest uppercase font-medium border border-[#F7E7CE]">
-          {order.status}
+        
+        {/* THE NEW INTERACTIVE STATUS DROPDOWN */}
+        <div className="relative flex items-center">
+          <select
+            value={order.status}
+            onChange={(e) => handleStatusChange(e.target.value)}
+            disabled={isUpdatingStatus}
+            className="appearance-none px-5 py-2.5 pr-10 bg-[#F7E7CE]/30 text-[#1A1A1A] text-[11px] tracking-widest uppercase font-semibold border border-[#F7E7CE] outline-none focus:border-[#B76E79] cursor-pointer disabled:opacity-50 transition-colors"
+          >
+            {STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-[#1A1A1A]">
+            <ChevronDown size={14} />
+          </div>
         </div>
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
