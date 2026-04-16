@@ -384,7 +384,7 @@ export default function CartDrawer() {
 
             {/* Trust badges */}
             <div className="px-6 pb-5 flex items-center justify-center gap-5 border-t border-[#1A1A1A]/06 pt-4">
-              {["Secure Checkout", "Free Returns", "Authenticity Guaranteed"].map((label) => (
+              {["Secure Checkout", "Free Exchanges", "Authenticity Guaranteed"].map((label) => (
                 <span
                   key={label}
                   className="text-[9px] tracking-[0.1em] uppercase text-[#1A1A1A]/30 text-center"
