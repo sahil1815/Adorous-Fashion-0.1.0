@@ -1,7 +1,20 @@
 // app/admin/page.tsx
 import Link from "next/link";
+import connectDB from "@/lib/mongodb";
+import Notification from "@/models/Notification";
+import { Bell, User, Package, Info } from "lucide-react"; // Using lucide-react for clean icons!
 
-export default function AdminDashboard() {
+// Tell Next.js to fetch fresh data every time this page loads
+export const dynamic = "force-dynamic";
+
+export default async function AdminDashboard() {
+  // Fetch the latest 10 notifications from the database
+  await connectDB();
+  const notifications = await Notification.find({})
+    .sort({ createdAt: -1 }) // Newest first
+    .limit(10)
+    .lean();
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -143,6 +156,67 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* RECENT ACTIVITY (NOTIFICATIONS) */}
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center gap-2">
+              <Bell size={20} className="text-[#B76E79]" />
+              Recent Activity
+            </h2>
+          </div>
+          
+          <div className="bg-white shadow rounded-lg overflow-hidden border border-gray-100">
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <p>No recent activity.</p>
+              </div>
+            ) : (
+              <ul className="divide-y divide-gray-100">
+                {notifications.map((notification: any) => {
+                  // Determine icon and color based on notification type
+                  let Icon = Info;
+                  let colorClass = "bg-gray-100 text-gray-500";
+                  
+                  if (notification.type === "profile_update") {
+                    Icon = User;
+                    colorClass = "bg-blue-50 text-blue-600";
+                  } else if (notification.type === "new_order") {
+                    Icon = Package;
+                    colorClass = "bg-green-50 text-green-600";
+                  }
+
+                  const timeString = new Date(notification.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                  const dateString = new Date(notification.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+                  return (
+                    <li key={notification._id.toString()} className={`p-5 transition-colors hover:bg-gray-50 ${!notification.isRead ? 'bg-[#F7E7CE]/10' : ''}`}>
+                      <div className="flex items-start gap-4">
+                        <div className={`p-2 rounded-full mt-0.5 ${colorClass}`}>
+                          <Icon size={16} />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold text-gray-900">
+                              {notification.title}
+                            </p>
+                            <span className="text-xs text-gray-400 whitespace-nowrap ml-4">
+                              {dateString} at {timeString}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-sm text-gray-600 leading-relaxed">
+                            {notification.message}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   );
