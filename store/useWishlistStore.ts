@@ -5,6 +5,7 @@ import type { ProductCardProps } from "@/components/shop/ProductCard";
 interface WishlistStore {
   items: ProductCardProps[];
   toggleWishlist: (item: ProductCardProps) => void;
+  syncWishlist: () => Promise<void>; // ✅ New function to pull DB data on load
 }
 
 export const useWishlistStore = create<WishlistStore>()(
@@ -12,19 +13,50 @@ export const useWishlistStore = create<WishlistStore>()(
     (set, get) => ({
       items: [],
       
-      toggleWishlist: (item) => {
-        const exists = get().items.find((i) => i.id === item.id);
+      toggleWishlist: async (item) => {
+        const currentItems = get().items;
+        const exists = currentItems.find((i) => i.id === item.id);
+        
+        let newItems;
         if (exists) {
-          // Remove if it exists
-          set({ items: get().items.filter((i) => i.id !== item.id) });
+          newItems = currentItems.filter((i) => i.id !== item.id);
         } else {
-          // Add if it doesn't
-          set({ items: [...get().items, item] });
+          newItems = [...currentItems, item];
+        }
+        
+        // 1. Update the UI instantly so it feels blazing fast
+        set({ items: newItems });
+
+        // 2. Silently attempt to save to the database in the background
+        try {
+          await fetch("/api/user/wishlist", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ wishlist: newItems }),
+          });
+        } catch (error) {
+          // Fails silently if they are a guest
         }
       },
+
+      // ✅ Call this to fetch the global wishlist from MongoDB when the user opens the site
+      syncWishlist: async () => {
+        try {
+          const res = await fetch("/api/user/wishlist");
+          if (res.ok) {
+            const data = await res.json();
+            // If the DB has items, overwrite the local browser memory with the global DB memory
+            if (data.wishlist && data.wishlist.length > 0) {
+              set({ items: data.wishlist });
+            }
+          }
+        } catch (error) {
+          // Fails silently
+        }
+      }
     }),
     {
-      name: "adorous-wishlist", // Saves to browser
+      name: "adorous-wishlist", 
     }
   )
 );

@@ -15,7 +15,6 @@ const UserSchema = new Schema(
       lowercase: true,
       trim: true,
     },
-    // ADDED PHONE FIELD HERE
     phone: {
       type: String,
       required: [true, "Phone number is required"],
@@ -34,7 +33,15 @@ const UserSchema = new Schema(
       type: Boolean,
       default: true,
     },
-    // NEW FIELDS FOR PASSWORD RESET
+    wishlist: {
+      type: Array,
+      default: [],
+    },
+    // ✅ NEW: Added cart array to store the active cart globally
+    cart: {
+      type: Array,
+      default: [],
+    },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
   },
@@ -47,8 +54,8 @@ const UserSchema = new Schema(
         delete ret._id;
         delete ret.__v;
         delete ret.passwordHash;
-        delete ret.resetPasswordToken;   // Keep these private
-        delete ret.resetPasswordExpires; // Keep these private
+        delete ret.resetPasswordToken;   
+        delete ret.resetPasswordExpires; 
       },
     },
   }

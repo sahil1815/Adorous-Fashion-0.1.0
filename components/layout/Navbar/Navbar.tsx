@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
+import { useWishlistStore } from "@/store/useWishlistStore"; // ✅ Added Wishlist Store import
 
 // ---------------------------------------------------------------------------
 // Types & Static Data
@@ -234,7 +235,8 @@ function MobileMenu({
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { totalItems, toggleCart } = useCartStore();
+  const { totalItems, toggleCart, syncCart } = useCartStore();
+  const { syncWishlist } = useWishlistStore(); // ✅ Extracted the sync function here
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -246,6 +248,10 @@ export default function Navbar() {
 
   useEffect(() => {
     setIsMounted(true);
+    
+    // ✅ PHASE 1 COMPLETE: The moment the Navbar loads, it fetches the global wishlist!
+    syncWishlist();
+    syncCart();
     const fetchCategories = async () => {
       try {
         const res = await fetch("/api/categories");
@@ -273,7 +279,7 @@ export default function Navbar() {
       }
     };
     fetchCategories();
-  }, []);
+  }, [syncWishlist, syncCart]); // ✅ Added syncWishlist to dependencies
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -344,7 +350,6 @@ export default function Navbar() {
               <User size={19} />
             </Link>
             
-            {/* ── THE NEW HEART ICON IS RIGHT HERE! ── */}
             <Link
               href="/wishlist"
               className="flex p-2 text-[#1A1A1A] hover:text-[#B76E79] transition-colors"

@@ -6,21 +6,20 @@ import { persist } from "zustand/middleware";
 // ---------------------------------------------------------------------------
 
 export interface CartItem {
-  id: string;               // product id
+  id: string;               
   variantId?: string;
   name: string;
   slug: string;
   image: string;
   price: number;
   quantity: number;
-  attributes?: Record<string, string>; // e.g. { color: "Rose Gold" }
+  attributes?: Record<string, string>; 
 }
 
 interface CartStore {
   items: CartItem[];
-  isOpen: boolean;          // controls the CartDrawer visibility
+  isOpen: boolean;          
 
-  // Actions
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
@@ -28,16 +27,31 @@ interface CartStore {
   removeItem: (id: string, variantId?: string) => void;
   updateQuantity: (id: string, quantity: number, variantId?: string) => void;
   clearCart: () => void;
+  
+  syncCart: () => Promise<void>; // ✅ Added global sync function
 
-  // Derived (computed inline — no selector needed)
   totalItems: () => number;
   totalPrice: () => number;
 }
 
 // ---------------------------------------------------------------------------
+// Database Sync Helper
+// ---------------------------------------------------------------------------
+// This silently pushes changes to MongoDB without interrupting the user
+const syncWithDatabase = async (cartItems: CartItem[]) => {
+  try {
+    await fetch("/api/user/cart", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cart: cartItems }),
+    });
+  } catch (error) {
+    // Fails silently if they are a guest
+  }
+};
+
+// ---------------------------------------------------------------------------
 // Store
-// `persist` serialises the cart to localStorage so it survives page refreshes.
-// The `isOpen` drawer state is intentionally excluded from persistence.
 // ---------------------------------------------------------------------------
 export const useCartStore = create<CartStore>()(
   persist(
@@ -49,50 +63,65 @@ export const useCartStore = create<CartStore>()(
       closeCart: () => set({ isOpen: false }),
       toggleCart: () => set((s) => ({ isOpen: !s.isOpen })),
 
-      addItem: (incoming) =>
-        set((state) => {
-          const existing = state.items.find(
-            (i) =>
-              i.id === incoming.id &&
-              // treat undefined variantId and supplied variantId as different SKUs
-              i.variantId === incoming.variantId
+      addItem: (incoming) => {
+        const state = get();
+        const existing = state.items.find(
+          (i) => i.id === incoming.id && i.variantId === incoming.variantId
+        );
+
+        let newItems;
+        if (existing) {
+          newItems = state.items.map((i) =>
+            i.id === incoming.id && i.variantId === incoming.variantId
+              ? { ...i, quantity: i.quantity + (incoming.quantity ?? 1) }
+              : i
           );
+        } else {
+          newItems = [...state.items, { ...incoming, quantity: incoming.quantity ?? 1 }];
+        }
 
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
-                i.id === incoming.id && i.variantId === incoming.variantId
-                  ? { ...i, quantity: i.quantity + (incoming.quantity ?? 1) }
-                  : i
-              ),
-            };
+        set({ items: newItems });
+        syncWithDatabase(newItems); // ✅ Save to database
+      },
+
+      removeItem: (id, variantId) => {
+        const newItems = get().items.filter(
+          (i) => !(i.id === id && i.variantId === variantId)
+        );
+        set({ items: newItems });
+        syncWithDatabase(newItems); // ✅ Save to database
+      },
+
+      updateQuantity: (id, quantity, variantId) => {
+        const newItems =
+          quantity <= 0
+            ? get().items.filter((i) => !(i.id === id && i.variantId === variantId))
+            : get().items.map((i) =>
+                i.id === id && i.variantId === variantId ? { ...i, quantity } : i
+              );
+        set({ items: newItems });
+        syncWithDatabase(newItems); // ✅ Save to database
+      },
+
+      clearCart: () => {
+        set({ items: [] });
+        syncWithDatabase([]); // ✅ Clear database cart too
+      },
+
+      // ✅ Call this to fetch the global cart from MongoDB when the user opens the site
+      syncCart: async () => {
+        try {
+          const res = await fetch("/api/user/cart");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.cart && data.cart.length > 0) {
+              set({ items: data.cart });
+            }
           }
-
-          return { items: [...state.items, { ...incoming, quantity: incoming.quantity ?? 1 }] };
-        }),
-
-      removeItem: (id, variantId) =>
-        set((state) => ({
-          items: state.items.filter(
-            (i) => !(i.id === id && i.variantId === variantId)
-          ),
-        })),
-
-      updateQuantity: (id, quantity, variantId) =>
-        set((state) => ({
-          items:
-            quantity <= 0
-              ? state.items.filter(
-                  (i) => !(i.id === id && i.variantId === variantId)
-                )
-              : state.items.map((i) =>
-                  i.id === id && i.variantId === variantId
-                    ? { ...i, quantity }
-                    : i
-                ),
-        })),
-
-      clearCart: () => set({ items: [] }),
+        } catch (error) {
+          // Fails silently
+        }
+      },
 
       totalItems: () =>
         get().items.reduce((sum, i) => sum + i.quantity, 0),
@@ -101,8 +130,8 @@ export const useCartStore = create<CartStore>()(
         get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
     }),
     {
-      name: "adorous-cart",                   // localStorage key
-      partialize: (state) => ({ items: state.items }), // only persist items
+      name: "adorous-cart",                   
+      partialize: (state) => ({ items: state.items }), 
     }
   )
 );
