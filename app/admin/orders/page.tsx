@@ -1,18 +1,15 @@
 // app/admin/orders/page.tsx
-import Link from "next/link"; // ADDED THIS
+import Link from "next/link";
 import connectDB from "@/lib/mongodb";
 import Order from "@/models/Order";
-// Import User model in case we need to populate logged-in user data
 import "@/models/User";
+import OrderStatusDropdown from "./OrderStatusDropdown"; // ✅ Import our new interactive component
 
-export const dynamic = "force-dynamic"; // Ensures fresh data on every load
+export const dynamic = "force-dynamic";
 
 export default async function AdminOrders() {
-  // Connect to the database and fetch all orders, newest first
   await connectDB();
   
-  // Populate the 'user' field in case it's not a guest checkout, 
-  // so we can grab the user's email if needed.
   const rawOrders = await Order.find()
     .populate("user", "email name")
     .sort({ createdAt: -1 })
@@ -31,62 +28,55 @@ export default async function AdminOrders() {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-200 shadow-sm overflow-hidden rounded-[16px]">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
             <thead className="bg-gray-50 text-[11px] uppercase tracking-widest text-gray-500 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-4 font-medium">Order ID</th>
-                <th className="px-6 py-4 font-medium">Date</th>
-                <th className="px-6 py-4 font-medium">Customer</th>
-                <th className="px-6 py-4 font-medium">Total</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium text-right">Action</th>
+                <th className="px-6 py-4 font-semibold">Order ID</th>
+                <th className="px-6 py-4 font-semibold">Date</th>
+                <th className="px-6 py-4 font-semibold">Customer</th>
+                <th className="px-6 py-4 font-semibold">Total</th>
+                <th className="px-6 py-4 font-semibold">Status</th>
+                <th className="px-6 py-4 font-semibold text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-100">
               {rawOrders.length > 0 ? (
                 rawOrders.map((order: any) => {
-                  // Format the date nicely
                   const date = new Date(order.createdAt).toLocaleDateString("en-US", {
                     month: "short", day: "numeric", year: "numeric"
                   });
                   
-                  // Extract customer details mapping from your actual schema
                   const customerName = order.shippingAddress?.fullName || "Unknown Customer";
                   const customerEmail = order.guestEmail || order.user?.email || "No email provided";
                   const orderTotal = order.total || 0;
                   const currentStatus = order.status || "pending";
                   
                   return (
-                    <tr key={order._id.toString()} className="hover:bg-gray-50 transition-colors">
+                    <tr key={order._id.toString()} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-6 py-4 font-medium text-[#1A1A1A]">
                         {order.orderNumber}
                       </td>
-                      <td className="px-6 py-4 tracking-wide">{date}</td>
+                      <td className="px-6 py-4 tracking-wide text-gray-500">{date}</td>
                       <td className="px-6 py-4">
-                        <p className="text-[#1A1A1A]">{customerName}</p>
-                        <p className="text-xs text-gray-400">{customerEmail}</p>
+                        <p className="text-[#1A1A1A] font-medium">{customerName}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{customerEmail}</p>
                       </td>
                       <td className="px-6 py-4 text-[#1A1A1A] font-medium">
-                        ${orderTotal.toFixed(2)}
+                        ৳{orderTotal.toLocaleString("en-IN")}
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider
-                          ${currentStatus === 'pending' || currentStatus === 'paid' ? 'bg-yellow-100 text-yellow-800' : ''}
-                          ${currentStatus === 'processing' ? 'bg-orange-100 text-orange-800' : ''}
-                          ${currentStatus === 'shipped' ? 'bg-blue-100 text-blue-800' : ''}
-                          ${currentStatus === 'delivered' ? 'bg-green-100 text-green-800' : ''}
-                          ${currentStatus === 'cancelled' || currentStatus === 'refunded' ? 'bg-red-100 text-red-800' : ''}
-                        `}>
-                          {currentStatus}
-                        </span>
+                        {/* ✅ Replace the static span with our interactive dropdown component */}
+                        <OrderStatusDropdown 
+                          orderId={order._id.toString()} 
+                          initialStatus={currentStatus} 
+                        />
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {/* CHANGED FROM BUTTON TO LINK */}
                         <Link 
                           href={`/admin/orders/${order._id.toString()}`}
-                          className="text-[11px] uppercase tracking-widest text-[#B76E79] hover:text-[#1A1A1A] transition-colors font-medium"
+                          className="text-[10px] uppercase tracking-widest font-semibold text-[#B76E79] bg-[#F7E7CE]/30 hover:bg-[#F7E7CE]/60 px-4 py-2 rounded-lg transition-colors"
                         >
                           View
                         </Link>
