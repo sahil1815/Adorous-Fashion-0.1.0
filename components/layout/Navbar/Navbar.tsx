@@ -294,7 +294,7 @@ export default function Navbar() {
           className={`bg-[#1A1A1A] text-[#F7E7CE] text-[10px] tracking-[0.25em] uppercase text-center transition-all duration-500 flex items-center justify-center 
           ${scrolled ? "h-0 opacity-0" : "h-8 opacity-100"}`}
         >
-          Complimentary shipping over $150
+          COMPLIMENTARY SHIPPING OVER ৳2000
         </div>
 
         {/* Top Row: Mobile Hamburger, Centered Logo, Icons */}

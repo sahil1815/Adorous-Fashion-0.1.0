@@ -17,8 +17,10 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
     (total: number, item: any) => total + item.price * item.quantity,
     0,
   );
-  const shipping = subtotal > 150 ? 0 : 15;
-  const total = subtotal + shipping;
+  
+  // ✅ Shipping is set to 0 here because the admin will update it manually later
+  const shipping = 0;
+  const total = subtotal;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
         address: formData.get("address"),
         apartment: formData.get("apartment"),
         city: formData.get("city"),
-        state: formData.get("state"), // Safely mapped
+        state: formData.get("state"), 
         postalCode: formData.get("postalCode"),
       },
       items: cartItems,
@@ -240,16 +242,24 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
                   <span>Subtotal</span>
                   <span>৳{subtotal.toFixed(2)}</span>
                 </div>
+                
+                {/* ✅ UPDATED SHIPPING UI */}
                 <div className="flex items-center justify-between text-sm text-[#1A1A1A]/70">
                   <span>Shipping</span>
-                  <span>
-                    {shipping === 0 ? "Free" : `৳${shipping.toFixed(2)}`}
-                  </span>
+                  <span className="italic text-[#B76E79]">Calculated at confirmation</span>
                 </div>
-                <div className="border-t border-[#1A1A1A]/10 pt-4 flex items-center justify-between text-base font-semibold text-[#1A1A1A]">
-                  <span>Total</span>
-                  <span>৳{total.toFixed(2)}</span>
+                
+                <div className="border-t border-[#1A1A1A]/10 pt-4">
+                  <div className="flex items-center justify-between text-base font-semibold text-[#1A1A1A]">
+                    <span>Total</span>
+                    <span>৳{total.toFixed(2)}</span>
+                  </div>
+                  {/* ✅ BEAUTIFUL DISCLAIMER TEXT */}
+                  <p className="text-right text-[10px] uppercase tracking-[0.1em] text-[#1A1A1A]/50 mt-2">
+                    + Shipping fees will be confirmed by our team
+                  </p>
                 </div>
+
               </div>
             </div>
           </aside>

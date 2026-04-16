@@ -29,7 +29,7 @@ import CartItem from "@/components/cart/CartItem";
 // ---------------------------------------------------------------------------
 
 /** Cart value threshold for free shipping */
-const FREE_SHIPPING_THRESHOLD = 150;
+const FREE_SHIPPING_THRESHOLD = 2000;
 
 // ---------------------------------------------------------------------------
 // Helpers
