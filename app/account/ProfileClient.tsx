@@ -1,21 +1,56 @@
 "use client";
 
 import { useState } from "react";
-import { User, Mail, Phone, Edit2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { User, Mail, Phone, Edit2, AlertCircle } from "lucide-react";
 
 export default function ProfileClient({ user }: { user: any }) {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     name: user.name || "",
     email: user.email || "",
     phone: user.phone || "",
   });
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    // STEP 2: We will connect this to the database API in the next step!
-    alert("In Step 2, this will save to the database and notify the admin!");
-    setIsEditing(false);
+    setIsSaving(true);
+    setError(null);
+
+    // Clean and validate phone number (just like the Register page)
+    const cleanedPhone = formData.phone.replace(/[\s-]/g, "");
+    if (!/^\+880\d{10}$/.test(cleanedPhone)) {
+      setError("Please enter a valid +880 phone number.");
+      setIsSaving(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, phone: cleanedPhone }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Something went wrong.");
+      }
+
+      // Success! Close the editor and refresh the page to show new data
+      setIsEditing(false);
+      router.refresh(); 
+
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -40,7 +75,6 @@ export default function ProfileClient({ user }: { user: any }) {
 
       {!isEditing ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Name Box */}
           <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50/50 flex items-start gap-4">
             <div className="mt-0.5 text-gray-400"><User size={18} /></div>
             <div>
@@ -49,7 +83,6 @@ export default function ProfileClient({ user }: { user: any }) {
             </div>
           </div>
 
-          {/* Email Box */}
           <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50/50 flex items-start gap-4">
             <div className="mt-0.5 text-gray-400"><Mail size={18} /></div>
             <div className="overflow-hidden">
@@ -58,7 +91,6 @@ export default function ProfileClient({ user }: { user: any }) {
             </div>
           </div>
 
-          {/* Phone Box */}
           <div className="p-4 rounded-2xl border border-gray-100 bg-gray-50/50 flex items-start gap-4 sm:col-span-2 lg:col-span-1">
             <div className="mt-0.5 text-gray-400"><Phone size={18} /></div>
             <div>
@@ -69,6 +101,14 @@ export default function ProfileClient({ user }: { user: any }) {
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-5 bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
+          
+          {error && (
+            <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs text-red-700">
+              <AlertCircle size={14} />
+              {error}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <label className="block text-[11px] uppercase tracking-wider font-medium text-gray-600">
               Name
@@ -105,17 +145,20 @@ export default function ProfileClient({ user }: { user: any }) {
           <div className="pt-2 flex gap-3">
             <button
               type="submit"
-              className="bg-[#1A1A1A] px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-white transition hover:bg-[#B76E79] rounded-xl"
+              disabled={isSaving}
+              className="bg-[#1A1A1A] px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-white transition hover:bg-[#B76E79] rounded-xl disabled:opacity-60"
             >
-              Save Changes
+              {isSaving ? "Saving..." : "Save Changes"}
             </button>
             <button
               type="button"
+              disabled={isSaving}
               onClick={() => {
                 setIsEditing(false);
+                setError(null);
                 setFormData({ name: user.name || "", email: user.email || "", phone: user.phone || "" });
               }}
-              className="bg-white border border-gray-200 px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-gray-600 transition hover:bg-gray-50 rounded-xl"
+              className="bg-white border border-gray-200 px-6 py-3 text-[11px] uppercase tracking-wider font-semibold text-gray-600 transition hover:bg-gray-50 rounded-xl disabled:opacity-60"
             >
               Cancel
             </button>
