@@ -7,19 +7,30 @@ export async function POST(request: Request) {
   try {
     await connectDB();
     const body = await request.json();
+    
+    // The frontend sends the email or phone number in the 'email' field
     const { email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: "Email and password are required" },
+        { error: "Email or Phone number, and password are required" },
         { status: 400 }
       );
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const identifier = email.trim();
+
+    // Search for a user by either email OR phone
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { phone: identifier }
+      ]
+    });
+
     if (!user) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: "Invalid credentials" },
         { status: 401 }
       );
     }
@@ -27,7 +38,7 @@ export async function POST(request: Request) {
     const validPassword = verifyPassword(password, user.passwordHash);
     if (!validPassword) {
       return NextResponse.json(
-        { error: "Invalid email or password" },
+        { error: "Invalid credentials" },
         { status: 401 }
       );
     }
@@ -44,6 +55,7 @@ export async function POST(request: Request) {
           id: user._id.toString(),
           name: user.name,
           email: user.email,
+          phone: user.phone, // added phone just in case you need it on the frontend
           role: user.role,
         },
       },
