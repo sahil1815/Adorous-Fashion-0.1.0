@@ -30,7 +30,7 @@ export default async function AccountPage() {
 
   return (
     // Clean, bright, soft background color
-    <main className="min-h-screen bg-[#FCFBFA] pt-32 md:pt-60 pb-24 px-4 sm:px-6">
+    <main className="min-h-screen bg-[#FCFBFA] pt-32 md:pt-50 pb-24 px-4 sm:px-6">
       <div className="mx-auto w-full max-w-6xl">
         
         <div className="flex flex-col md:flex-row gap-8">
