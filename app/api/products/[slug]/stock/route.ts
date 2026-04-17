@@ -5,16 +5,16 @@ import Product from "@/models/Product";
 export async function PATCH(
   request: NextRequest,
   // ✅ FIXED: In newer Next.js versions, params is a Promise
-  context: { params: Promise<{ id: string }> } 
+  context: { params: Promise<{ slug: string }> } 
 ) {
   try {
     // ✅ FIXED: We must await the params before we can read the ID
-    const { id } = await context.params; 
+    const { slug } = await context.params; 
 
     await connectDB();
     const { stock } = await request.json();
 
-    const product = await Product.findById(id);
+    const product = await Product.findById(slug);
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }

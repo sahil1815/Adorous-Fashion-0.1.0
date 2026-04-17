@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const protectedPaths = ["/account", "/checkout"];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const requiresAuth = protectedPaths.some(
@@ -15,6 +15,7 @@ export function middleware(request: NextRequest) {
   }
 
   const session = request.cookies.get("session")?.value;
+
   if (!session) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirectTo", pathname);
