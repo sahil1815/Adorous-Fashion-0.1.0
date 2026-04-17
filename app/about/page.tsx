@@ -2,7 +2,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ShieldCheck, Gem, HeartHandshake } from "lucide-react";
-import about_brand from "@/public/about-brand.jpg";
 
 export const metadata = {
   title: "About Us & Our Story | Adorous Fashion",
@@ -65,7 +64,7 @@ export default function AboutPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center mb-24 md:mb-32">
           <div className="relative aspect-[4/5] bg-[#F7E7CE]/30 w-full overflow-hidden">
             <Image
-              src={about_brand}
+              src="https://ik.imagekit.io/adorousfashion/IMG_5825.HEIC?updatedAt=1775814170351"
               alt="Adorous craftsmanship"
               fill
               className="object-cover"
