@@ -64,7 +64,7 @@ export default function AboutPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center mb-24 md:mb-32">
           <div className="relative aspect-[4/5] bg-[#F7E7CE]/30 w-full overflow-hidden">
             <Image
-              src="/placeholder.jpg"
+              src="/about-brand.jpg"
               alt="Adorous craftsmanship"
               fill
               className="object-cover"

@@ -5,15 +5,15 @@ import { getCurrentUser } from "@/lib/session";
 
 export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ id: string }> } // ✅ Using Promise for Next.js 15+ compatibility
+  context: { params: Promise<{ slug: string }> } // ✅ Changed 'id' to 'slug' to match the folder name
 ) {
   try {
     await connectDB();
-    const { id } = await context.params;
+    const { slug } = await context.params; // ✅ Changed 'id' to 'slug'
     const body = await request.json();
     const { rating, body: reviewBody } = body;
 
-    // 1. Ensure the user is logged in (required by your Product schema)
+    // 1. Ensure the user is logged in
     const sessionUser = await getCurrentUser();
     if (!sessionUser) {
       return NextResponse.json(
@@ -30,8 +30,14 @@ export async function POST(
       return NextResponse.json({ error: "Review message cannot be empty." }, { status: 400 });
     }
 
-    // 3. Find the product
-    const product = await Product.findById(id);
+    // 3. Find the product (Bulletproof check: searches by ID first, then by text slug)
+    let product;
+    if (slug.length === 24) {
+      product = await Product.findById(slug);
+    } else {
+      product = await Product.findOne({ slug: slug });
+    }
+
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
@@ -41,21 +47,20 @@ export async function POST(
       user: sessionUser.id,
       rating: Number(rating),
       body: reviewBody.trim(),
-      isVerified: true, // We'll mark them as verified buyers for now
+      isVerified: true, 
       createdAt: new Date()
     };
 
     // 5. Push the review into the product's review array
     product.reviews.push(newReview);
 
-    // 6. Save the product! 
-    // (Your awesome pre-save hook in Product.ts will automatically recalculate the averageRating and reviewCount here!)
+    // 6. Save the product!
     await product.save();
 
     return NextResponse.json({ success: true, message: "Review submitted successfully!" }, { status: 201 });
 
   } catch (error: any) {
-    console.error("[POST /api/products/[id]/review]", error);
+    console.error("[POST /api/products/[slug]/review]", error);
     return NextResponse.json(
       { error: "Failed to submit review. Please try again." }, 
       { status: 500 }
