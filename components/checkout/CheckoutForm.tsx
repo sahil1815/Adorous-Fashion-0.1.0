@@ -154,6 +154,14 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
                 </h2>
                 <div className="grid grid-cols-1 gap-4">
                   <input
+                    type="text"
+                    name="fullName"
+                    defaultValue={initialName}
+                    required
+                    placeholder="Full name"
+                    className={`${inputStyles} sm:col-span-2`}
+                  />
+                  <input
                     type="email"
                     name="email"
                     defaultValue={initialEmail}
@@ -177,14 +185,6 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
                   Shipping Address
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    name="fullName"
-                    defaultValue={initialName}
-                    required
-                    placeholder="Full name"
-                    className={`${inputStyles} sm:col-span-2`}
-                  />
                   <input
                     type="text"
                     name="city"
