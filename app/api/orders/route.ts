@@ -1,4 +1,3 @@
-// app/api/orders/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Order from "@/models/Order";
@@ -8,13 +7,12 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const email = searchParams.get("email"); // For guest orders
-    const userId = searchParams.get("userId"); // For authenticated users
+    const email = searchParams.get("email"); 
+    const userId = searchParams.get("userId"); 
     const limit = parseInt(searchParams.get("limit") || "10");
     const page = parseInt(searchParams.get("page") || "1");
     const skip = (page - 1) * limit;
 
-    // Build query - require either email or userId for security
     const query: any = {};
     if (email) {
       query.customerEmail = email;
@@ -68,10 +66,9 @@ export async function POST(request: NextRequest) {
       shipping,
       total,
       paymentMethod = "COD",
-      userId // optional for authenticated users
+      userId 
     } = body;
 
-    // Validate required fields
     if (!customer?.email || !shippingAddress || !items?.length) {
       return NextResponse.json(
         { error: "Missing required order information" },
@@ -79,9 +76,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Format items to exactly match OrderItemSchema
     const formattedItems = items.map((item: any) => ({
-      product: item.id, // MongoDB ObjectId
+      product: item.id, 
       variant: item.variantId || undefined,
       name: item.name,
       sku: item.sku || item.slug || "SKU-UNKNOWN",
@@ -91,25 +87,23 @@ export async function POST(request: NextRequest) {
       image: item.image || "",
     }));
 
-    // Generate order number manually BEFORE creating the document
-    // This bypasses the strict Mongoose validation error
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const random = Math.floor(Math.random() * 100000).toString().padStart(5, "0");
     const orderNumber = `ADR-${date}-${random}`;
 
-    // Create the order
     const order = await Order.create({
-      orderNumber, // Passed explicitly here
+      orderNumber, 
       user: userId || null, 
       guestEmail: customer.email, 
       shippingAddress: {
-        fullName: `${shippingAddress.firstName} ${shippingAddress.lastName}`,
-        line1: shippingAddress.address,
-        line2: shippingAddress.apartment || "",
+        // ✅ Direct mapping from the new BD-friendly form
+        fullName: shippingAddress.fullName,
+        line1: shippingAddress.address, 
+        line2: "", // We removed apartment, so this is empty
         city: shippingAddress.city,
-        state: shippingAddress.state || "N/A", // Safely mapped to your new form field
-        postalCode: shippingAddress.postalCode,
-        country: shippingAddress.country || "US",
+        state: shippingAddress.state, 
+        postalCode: "", // We removed postalCode, so this is empty
+        country: "BD",
         phone: customer.phone,
       },
       items: formattedItems,
@@ -132,7 +126,6 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error("[POST /api/orders] Error:", err);
 
-    // Better error logging so we know exactly what failed
     if (err.name === "ValidationError") {
       const errors = Object.values(err.errors).map((e: any) => e.message);
       return NextResponse.json(
