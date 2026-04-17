@@ -12,15 +12,16 @@ import connectDB from "@/lib/mongodb";
 import Product from "@/models/Product";
 
 // ---------------------------------------------------------------------------
-// Fetch featured products from database
+// Fetch Best Selling products from database
 // ---------------------------------------------------------------------------
-async function getFeaturedProducts(): Promise<ProductCardProps[]> {
+async function getBestSellers(): Promise<ProductCardProps[]> {
   try {
     await connectDB();
 
+    // ✅ FIXED QUERY: Now sorts by popularity (reviewCount) and features first!
     const rawProducts = await Product.find({ isActive: true })
       .populate("category", "name")
-      .sort({ isFeatured: -1, createdAt: -1 })
+      .sort({ reviewCount: -1, isFeatured: -1, createdAt: -1 })
       .limit(8)
       .lean();
 
@@ -42,7 +43,6 @@ async function getFeaturedProducts(): Promise<ProductCardProps[]> {
       })) || [],
     }));
   } catch (error) {
-    // Return empty array if database is not available (e.g., during build)
     console.warn("Database not available, returning empty products:", error);
     return [];
   }
@@ -66,29 +66,30 @@ function getColorFromVariant(variant: any): string {
 }
 
 // ---------------------------------------------------------------------------
-// Page (Server Component — safe to async, safe to import DB utils here)
+// Page (Server Component)
 // ---------------------------------------------------------------------------
 export default async function HomePage() {
-  const featuredProducts = await getFeaturedProducts();
+  const bestSellers = await getBestSellers();
 
-  // Explicitly setting bg-white so dark mode doesn't turn the background black!
   return (
     <main className="bg-white">
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <Hero />
 
-      {/* ── Featured Products ─────────────────────────────────────────── */}
+      {/* ── Best Sellers Section ──────────────────────────────────────── */}
       <section className="mx-auto max-w-[1400px] px-6 py-16 md:px-10">
         <div className="mb-10 flex items-end justify-between">
           <div>
+            {/* ✅ FIXED: Updated Subheading */}
             <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.25em] text-[#B76E79]">
-              Curated for you
+              Our Most Popular
             </p>
+            {/* ✅ FIXED: Updated Main Heading */}
             <h2
               className="text-3xl font-light text-[#1A1A1A] md:text-4xl"
               style={{ fontFamily: "var(--font-serif)" }}
             >
-              New Arrivals
+              Best Sellers
             </h2>
           </div>
           <Link
@@ -103,11 +104,7 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        {/*
-          ProductGridClient is a "use client" wrapper around ProductGrid.
-          All event handler callbacks live there — never in this server file.
-        */}
-        <ProductGridClient products={featuredProducts} columns={4} />
+        <ProductGridClient products={bestSellers} columns={4} />
       </section>
     </main>
   );
