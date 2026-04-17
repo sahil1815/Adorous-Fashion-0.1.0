@@ -13,7 +13,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
-import { useWishlistStore } from "@/store/useWishlistStore"; // ✅ Added Wishlist Store import
+import { useWishlistStore } from "@/store/useWishlistStore"; 
 
 // ---------------------------------------------------------------------------
 // Types & Static Data
@@ -37,9 +37,9 @@ const STATIC_LINKS_START: NavLink[] = [
   },
 ];
 
+// ✅ FIXED: Removed the "Sale" link here!
 const STATIC_LINKS_END: NavLink[] = [
   { label: "About", href: "/about" },
-  { label: "Sale", href: "/sale" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -236,7 +236,7 @@ function MobileMenu({
 export default function Navbar() {
   const pathname = usePathname();
   const { totalItems, toggleCart, syncCart } = useCartStore();
-  const { syncWishlist } = useWishlistStore(); // ✅ Extracted the sync function here
+  const { syncWishlist } = useWishlistStore(); 
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -249,7 +249,6 @@ export default function Navbar() {
   useEffect(() => {
     setIsMounted(true);
     
-    // ✅ PHASE 1 COMPLETE: The moment the Navbar loads, it fetches the global wishlist!
     syncWishlist();
     syncCart();
     const fetchCategories = async () => {
@@ -279,7 +278,7 @@ export default function Navbar() {
       }
     };
     fetchCategories();
-  }, [syncWishlist, syncCart]); // ✅ Added syncWishlist to dependencies
+  }, [syncWishlist, syncCart]); 
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
