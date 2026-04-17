@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Lock } from "lucide-react";
+import { ChevronRight, Lock, CheckCircle } from "lucide-react"; // ✅ Added CheckCircle for the success screen
 import { useCartStore } from "@/store/useCartStore";
 
-// ✅ Updated props to accept the autofill data from the database
 interface CheckoutFormProps {
   initialName: string;
   initialEmail: string;
@@ -21,16 +20,19 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
     0,
   );
   
-  const shipping = 0; // Calculated manually by admin later
+  const shipping = 0; 
   const total = subtotal;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  // ✅ NEW: State to hold the successful order number and trigger the full-screen success view
+  const [successfulOrderNumber, setSuccessfulOrderNumber] = useState<string | null>(null);
 
   const handlePlaceOrder = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setMessage(null);
+    setError(null);
 
     const formData = new FormData(e.currentTarget);
 
@@ -40,11 +42,10 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
         phone: formData.get("phone"),
       },
       shippingAddress: {
-        // ✅ Merged into a single fullName field
         fullName: formData.get("fullName"),
         address: formData.get("address"),
-        city: formData.get("city"), // Used for District/জেলা
-        state: formData.get("state"), // Used for Sub-district/উপজেলা
+        city: formData.get("city"), 
+        state: formData.get("state"), 
       },
       items: cartItems,
       subtotal,
@@ -62,17 +63,17 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
       const data = await response.json();
 
       if (data.success) {
-        setMessage(
-          `Order placed successfully! Your Order ID is ${data.orderNumber}`,
-        );
-        // If you want to clear the cart after successful order, you can call it here:
-        // store.clearCart(); 
+        // ✅ 1. Clear the cart immediately (This empties the drawer and the database!)
+        store.clearCart();
+        
+        // ✅ 2. Trigger the full-screen success UI
+        setSuccessfulOrderNumber(data.orderNumber);
       } else {
-        setMessage("Something went wrong. Please try again.");
+        setError("Something went wrong. Please try again.");
       }
     } catch (error) {
       console.error("Checkout error:", error);
-      setMessage("A network error occurred.");
+      setError("A network error occurred.");
     } finally {
       setIsSubmitting(false);
     }
@@ -81,6 +82,42 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
   const inputStyles =
     "w-full border border-[#1A1A1A]/20 bg-white text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 p-4 text-sm focus:outline-none focus:border-[#B76E79] focus:ring-1 focus:ring-[#B76E79] transition-all";
 
+  // ✅ NEW FULL-SCREEN SUCCESS VIEW
+  // If the order is successful, we hide the form and show this beautiful confirmation page instead!
+  if (successfulOrderNumber) {
+    return (
+      <main className="min-h-screen bg-[#F7E7CE]/10 pt-28 pb-24 flex items-center justify-center px-6">
+        <div className="max-w-lg w-full bg-white p-12 text-center rounded-sm shadow-xl border border-[#F7E7CE] animate-in fade-in zoom-in duration-500">
+          <CheckCircle className="w-20 h-20 text-[#B76E79] mx-auto mb-6" strokeWidth={1} />
+          <h1 className="text-3xl font-light text-[#1A1A1A] mb-4" style={{ fontFamily: "var(--font-serif)" }}>
+            Order Confirmed
+          </h1>
+          <p className="text-[#1A1A1A]/70 text-sm mb-2 leading-relaxed">
+            Thank you for shopping with Adorous. Your beautifully crafted items will be with you shortly.
+          </p>
+          <p className="text-[#1A1A1A] font-medium text-sm mb-8">
+            Order ID: <span className="font-bold tracking-wider">{successfulOrderNumber}</span>
+          </p>
+          <div className="space-y-4">
+            <Link 
+              href="/account"
+              className="block w-full bg-[#1A1A1A] text-white uppercase tracking-[0.2em] text-[11px] py-4 hover:bg-[#B76E79] transition-colors rounded-sm"
+            >
+              View Order Details
+            </Link>
+            <Link 
+              href="/shop"
+              className="block w-full bg-transparent border border-[#1A1A1A]/20 text-[#1A1A1A] uppercase tracking-[0.2em] text-[11px] py-4 hover:border-[#B76E79] hover:text-[#B76E79] transition-colors rounded-sm"
+            >
+              Continue Shopping
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // STANDARD CHECKOUT FORM (Hidden if order is successful)
   return (
     <main className="min-h-screen bg-white pt-28 pb-24">
       <div className="container mx-auto px-6 md:px-10 max-w-6xl">
@@ -116,7 +153,6 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
                   Contact Information
                 </h2>
                 <div className="grid grid-cols-1 gap-4">
-                  {/* ✅ Autofilled Contact Info */}
                   <input
                     type="email"
                     name="email"
@@ -141,7 +177,6 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
                   Shipping Address
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* ✅ Single Full Name input (Autofilled) */}
                   <input
                     type="text"
                     name="fullName"
@@ -150,7 +185,6 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
                     placeholder="Full name"
                     className={`${inputStyles} sm:col-span-2`}
                   />
-                  {/* ✅ BD-Friendly Placeholders */}
                   <input
                     type="text"
                     name="address"
@@ -200,9 +234,9 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
                 {isSubmitting ? "Placing order…" : "Place order"}
               </button>
 
-              {message && (
-                <div className="rounded-2xl bg-[#F7E7CE]/70 p-4 text-sm text-[#1A1A1A]">
-                  {message}
+              {error && (
+                <div className="rounded-2xl bg-red-50 border border-red-100 p-4 text-sm text-red-600">
+                  {error}
                 </div>
               )}
             </form>
