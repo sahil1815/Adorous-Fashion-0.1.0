@@ -122,6 +122,7 @@ export default async function ProductDetailPage(props: Props) {
                 currency="BDT" 
                 averageRating={raw.averageRating || 0}
                 reviewCount={raw.reviewCount || 0}
+                soldCount={raw.soldCount || 0}
                 totalStock={raw.totalStock ?? 0} 
                 variants={variants}
                 primaryImage={primaryImage}

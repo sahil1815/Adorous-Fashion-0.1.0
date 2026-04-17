@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; // ✅ Added router for refreshing after review
 import {
   Heart,
   Share2,
@@ -14,7 +15,7 @@ import {
   RotateCcw,
   ShieldCheck,
   ChevronRight,
-  Flame // ✅ Added for urgency icons
+  Flame 
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useWishlistStore } from "@/store/useWishlistStore"; 
@@ -43,6 +44,7 @@ export interface ProductInfoProps {
   currency?: string;
   averageRating: number;
   reviewCount: number;
+  soldCount?: number; // ✅ Added to props
   totalStock: number;
   variants: ProductVariantData[];
   primaryImage: { url: string; alt: string };
@@ -61,29 +63,6 @@ function getSavings(price: number, compare: number) {
   return Math.round(((compare - price) / compare) * 100);
 }
 
-function StarRating({ rating, count }: { rating: number; count: number }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            size={13}
-            className={
-              star <= Math.round(rating)
-                ? "fill-[#B76E79] stroke-[#B76E79]"
-                : "fill-[#1A1A1A]/10 stroke-[#1A1A1A]/20"
-            }
-          />
-        ))}
-      </div>
-      <span className="text-[11px] tracking-[0.06em] text-[#1A1A1A]/45">
-        {rating.toFixed(1)} ({count} {count === 1 ? "review" : "reviews"})
-      </span>
-    </div>
-  );
-}
-
 export default function ProductInfo({
   id,
   slug,
@@ -93,9 +72,10 @@ export default function ProductInfo({
   category,
   basePrice,
   compareAtPrice,
-  currency = "BDT", // Defaulted to BDT
+  currency = "BDT", 
   averageRating,
   reviewCount,
+  soldCount = 0,
   totalStock,
   variants,
   primaryImage,
@@ -103,6 +83,7 @@ export default function ProductInfo({
   dimensions,
   careInstructions,
 }: ProductInfoProps) {
+  const router = useRouter();
   const colorVariants = variants.filter((v) => v.attributes?.color);
   const hasSwatches   = colorVariants.length > 0;
 
@@ -112,6 +93,13 @@ export default function ProductInfo({
   const [quantity, setQuantity]     = useState(1);
   const [added, setAdded]           = useState(false);
   const [shared, setShared]         = useState(false);
+
+  // ✅ Review Form State
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewBody, setReviewBody] = useState("");
+  const [reviewStatus, setReviewStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [reviewError, setReviewError] = useState("");
 
   const { addItem, openCart } = useCartStore();
   const wishlistItems = useWishlistStore((state) => state.items);
@@ -131,7 +119,6 @@ export default function ProductInfo({
   const isSoldOut         = activeStock === 0;
   const savingsPct        = onSale && activeCompare ? getSavings(activePrice, activeCompare) : 0;
 
-  // ✅ BEAUTIFULLY TIERED URGENCY SYSTEM
   let stockMessage = null;
   if (isSoldOut) {
     stockMessage = (
@@ -211,6 +198,33 @@ export default function ProductInfo({
       setTimeout(() => setShared(false), 2000);
     }
   }, [name]);
+
+  // ✅ Review Submit Handler
+  const handleReviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setReviewStatus("loading");
+    setReviewError("");
+    try {
+      const res = await fetch(`/api/products/${id}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: reviewRating, body: reviewBody }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      
+      setReviewStatus("success");
+      setReviewBody("");
+      setTimeout(() => {
+        setShowReviewForm(false);
+        setReviewStatus("idle");
+        router.refresh(); // Refreshes the page to show the updated star rating!
+      }, 2000);
+    } catch (err: any) {
+      setReviewStatus("error");
+      setReviewError(err.message);
+    }
+  };
 
   const accordionItems: AccordionItem[] = [
     {
@@ -297,11 +311,95 @@ export default function ProductInfo({
         >
           {name}
         </h1>
-        {reviewCount > 0 && (
-          <StarRating rating={averageRating} count={reviewCount} />
+        
+        {/* ✅ NEW: Beautiful inline Stats & Review Button */}
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  size={14}
+                  className={
+                    star <= Math.round(averageRating)
+                      ? "fill-[#B76E79] stroke-[#B76E79]"
+                      : "fill-transparent stroke-[#1A1A1A]/20"
+                  }
+                />
+              ))}
+            </div>
+            <span className="text-[12px] text-[#1A1A1A]/60 font-medium">
+              {averageRating > 0 ? `${averageRating.toFixed(1)} (${reviewCount} reviews)` : "No reviews yet"}
+            </span>
+            <span className="text-[#1A1A1A]/20 text-[12px] mx-1">•</span>
+            <span className="text-[12px] text-[#1A1A1A]/60 font-medium uppercase tracking-wider">
+              {soldCount} Sold
+            </span>
+          </div>
+
+          <button
+            onClick={() => setShowReviewForm(!showReviewForm)}
+            className="text-[10px] uppercase tracking-wider font-semibold text-[#B76E79] hover:text-[#1A1A1A] transition-colors underline underline-offset-2"
+          >
+            {showReviewForm ? "Cancel Review" : "Write a Review"}
+          </button>
+        </div>
+
+        {/* ✅ NEW: Inline Interactive Review Form */}
+        {showReviewForm && (
+          <form
+            onSubmit={handleReviewSubmit}
+            className="mt-4 p-5 bg-[#F7E7CE]/10 border border-[#F7E7CE] rounded-sm space-y-4"
+          >
+            {reviewStatus === "success" ? (
+              <div className="text-green-600 text-sm font-medium flex items-center gap-2">
+                <Check size={16} /> Thank you! Your review has been submitted.
+              </div>
+            ) : (
+              <>
+                <div>
+                  <p className="text-[11px] uppercase tracking-wider text-[#1A1A1A]/60 mb-2">Your Rating</p>
+                  <div className="flex items-center gap-1 cursor-pointer">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        size={22}
+                        onClick={() => setReviewRating(star)}
+                        className={`transition-all hover:scale-110 ${
+                          star <= reviewRating ? "fill-[#B76E79] stroke-[#B76E79]" : "fill-transparent stroke-[#1A1A1A]/30"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[11px] uppercase tracking-wider text-[#1A1A1A]/60 mb-2">Your Review</p>
+                  <textarea
+                    required
+                    rows={3}
+                    value={reviewBody}
+                    onChange={(e) => setReviewBody(e.target.value)}
+                    placeholder="What did you love about this piece?"
+                    className="w-full text-sm p-3 border border-[#1A1A1A]/10 rounded-sm outline-none focus:border-[#B76E79] transition-colors resize-none bg-white"
+                  />
+                </div>
+                {reviewStatus === "error" && (
+                  <p className="text-red-500 text-xs">{reviewError}</p>
+                )}
+                <button
+                  type="submit"
+                  disabled={reviewStatus === "loading"}
+                  className="bg-[#1A1A1A] text-white text-[10px] uppercase tracking-widest px-6 py-2.5 rounded-sm hover:bg-[#B76E79] transition-colors disabled:opacity-50"
+                >
+                  {reviewStatus === "loading" ? "Submitting..." : "Submit Review"}
+                </button>
+              </>
+            )}
+          </form>
         )}
+
         {shortDescription && (
-          <p className="text-[13px] leading-relaxed text-[#1A1A1A]/55 tracking-wide">
+          <p className="text-[13px] leading-relaxed text-[#1A1A1A]/55 tracking-wide mt-3">
             {shortDescription}
           </p>
         )}
@@ -409,7 +507,6 @@ export default function ProductInfo({
             </button>
           </div>
 
-          {/* ✅ RENDER THE NEW TIERED STOCK MESSAGE HERE */}
           {stockMessage}
         </div>
       </div>
