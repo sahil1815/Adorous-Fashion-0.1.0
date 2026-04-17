@@ -3,12 +3,9 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Star } from "lucide-react"; // ✅ Added Star icon
+import { Heart, Star } from "lucide-react"; 
 import { useWishlistStore } from "@/store/useWishlistStore";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 export interface ProductCardProps {
   id: string;
   slug: string;
@@ -20,11 +17,8 @@ export interface ProductCardProps {
     primary: { url: string; alt: string };
     hover?:  { url: string; alt: string };
   };
-  
-  // ✅ NEW: Added the rating and sold count to the card's data
   averageRating?: number; 
   soldCount?: number;
-
   isWishlisted?: boolean;
   onWishlistToggle?: (id: string, wishlisted: boolean) => void;
   badge?: string;
@@ -55,7 +49,6 @@ export function ProductCardSkeleton() {
 }
 
 export default function ProductCard(props: ProductCardProps) {
-  // ✅ Extract the new properties (defaulting to 0 if they haven't loaded yet)
   const { id, slug, name, price, compareAtPrice, images, averageRating = 0, soldCount = 0 } = props;
   const [hovered, setHovered] = useState(false);
   
@@ -105,7 +98,7 @@ export default function ProductCard(props: ProductCardProps) {
           <h3 className="text-[13px] md:text-[14px] text-[#4a4a4a] mb-1.5 line-clamp-2">{name}</h3>
         </Link>
 
-        {/* ✅ NEW: 5-Star Rating, Percentage, and Sold Count */}
+        {/* ✅ FIXED: Now displays the raw 0-5 averageRating (e.g., 4.3) */}
         <div className="flex items-center justify-center gap-1.5 mb-3">
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -121,12 +114,12 @@ export default function ProductCard(props: ProductCardProps) {
             ))}
           </div>
           {averageRating > 0 && (
-            <span className="text-[10px] text-[#1A1A1A]/50 font-medium">
-              {Math.round((averageRating / 5) * 100)}%
+            <span className="text-[10px] text-[#1A1A1A]/50 font-medium mt-[1px]">
+              {averageRating.toFixed(1)}
             </span>
           )}
-          <span className="text-[#1A1A1A]/20 text-[10px] mx-0.5">•</span>
-          <span className="text-[10px] text-[#1A1A1A]/50 font-medium uppercase tracking-wider">
+          <span className="text-[#1A1A1A]/20 text-[10px] mx-0.5 mt-[1px]">•</span>
+          <span className="text-[10px] text-[#1A1A1A]/50 font-medium uppercase tracking-wider mt-[1px]">
             {soldCount} Sold
           </span>
         </div>

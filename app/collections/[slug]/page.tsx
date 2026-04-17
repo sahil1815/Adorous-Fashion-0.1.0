@@ -6,8 +6,6 @@ import Product from "@/models/Product";
 import ProductGridClient from "@/components/shop/ProductGridClient";
 import type { ProductCardProps } from "@/components/shop/ProductCard";
 
-
-// 1. Force Next.js to bypass the cache and fetch fresh data every time
 export const dynamic = "force-dynamic";
 
 export default async function CollectionPage(
@@ -25,20 +23,23 @@ export default async function CollectionPage(
   if (slug === "best-sellers") description = "Our most loved pieces, chosen by you.";
   if (slug === "spring") description = "Light, elegant, and perfect for the new season.";
 
-  // 2. CONNECT TO MONGODB AND FETCH THE PRODUCTS!
   await connectDB();
   const products = await Product.find({ 
     collections: slug, 
     isActive: true 
   }).lean();
 
-  // 3. MAP DATABASE PRODUCTS TO MATCH OUR NEW PRODUCTCARD FORMAT
   const formattedProducts: ProductCardProps[] = products.map((p: any) => ({
     id: p._id.toString(),
     slug: p.slug,
     name: p.name,
     price: p.basePrice || 0,
     compareAtPrice: p.compareAtPrice,
+    
+    // ✅ ADDED: Now fetching rating and sold count from DB for collection pages!
+    averageRating: p.averageRating || 0,
+    soldCount: p.soldCount || 0,
+
     images: {
       primary: { 
         url: p.images?.[0]?.url || "/placeholder.jpg", 
@@ -67,7 +68,6 @@ export default async function CollectionPage(
           </p>
         </div>
 
-        {/* 4. RENDER OUR BEAUTIFUL GRID COMPONENT INSTEAD OF HARDCODED HTML */}
         {formattedProducts.length > 0 ? (
           <ProductGridClient products={formattedProducts} columns={4} />
         ) : (
