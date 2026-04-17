@@ -19,12 +19,12 @@ const getStatusBadgeStyles = (status: string) => {
     case "processing":
       return "bg-orange-100 text-orange-800 border-orange-200";
     case "accepted":
-      return "bg-indigo-100 text-indigo-800 border-indigo-200"; // Deep blue/purple
+      return "bg-indigo-100 text-indigo-800 border-indigo-200"; 
     case "in_transit":
     case "shipped":
-      return "bg-blue-100 text-blue-800 border-blue-200"; // Bright blue
+      return "bg-blue-100 text-blue-800 border-blue-200"; 
     case "ready_for_delivery":
-      return "bg-purple-100 text-purple-800 border-purple-200"; // Distinct purple
+      return "bg-purple-100 text-purple-800 border-purple-200"; 
     case "delivered":
       return "bg-green-100 text-green-800 border-green-200";
     case "returned":
@@ -46,9 +46,15 @@ export default async function AccountPage() {
   const userId = sessionUser.id; 
 
   const dbUser = await User.findById(userId).lean();
+  
+  // ✅ UPDATED QUERY: We are now populating "items.product" so we can get the product slug for the links!
   const orders = await Order.find({
     $or: [{ user: userId }, { guestEmail: sessionUser.email }]
   })
+    .populate({
+      path: "items.product",
+      select: "slug"
+    })
     .sort({ createdAt: -1 })
     .lean();
 
@@ -120,37 +126,73 @@ export default async function AccountPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
+                  <table className="w-full text-left text-sm min-w-[700px]">
                     <thead className="border-b border-gray-100 text-gray-400 text-[10px] uppercase tracking-wider">
                       <tr>
                         <th className="pb-4 font-semibold px-2">Order ID</th>
-                        <th className="pb-4 font-semibold px-2">Date</th>
+                        {/* ✅ NEW: Items Column */}
+                        <th className="pb-4 font-semibold px-2">Items</th>
+                        {/* ✅ UPDATED: Date & Time Header */}
+                        <th className="pb-4 font-semibold px-2">Date & Time</th>
                         <th className="pb-4 font-semibold px-2">Status</th>
                         <th className="pb-4 font-semibold text-right px-2">Total</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                       {orders.map((order: any) => {
-                        const date = new Date(order.createdAt).toLocaleDateString("en-US", {
-                          month: "short", day: "numeric", year: "numeric"
-                        });
+                        // ✅ SPLIT DATE AND TIME
+                        const createdAt = new Date(order.createdAt);
+                        const date = createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+                        const time = createdAt.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
                         
                         const currentStatus = order.status || "pending";
                         const badgeStyle = getStatusBadgeStyles(currentStatus);
-                        // ✅ This removes underscores so "in_transit" becomes "in transit"
                         const displayStatus = currentStatus.replace(/_/g, ' '); 
                         
                         return (
                           <tr key={order._id.toString()} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="py-5 font-medium text-[#1A1A1A] px-2">{order.orderNumber}</td>
-                            <td className="py-5 text-gray-500 px-2">{date}</td>
-                            <td className="py-5 px-2">
-                              {/* ✅ The span now uses the dynamic badge styles */}
+                            <td className="py-5 font-medium text-[#1A1A1A] px-2 align-top">{order.orderNumber}</td>
+                            
+                            {/* ✅ NEW: Items List with Clickable Links and Thumbnails */}
+                            <td className="py-5 px-2 align-top">
+                              <div className="flex flex-col gap-3">
+                                {order.items.map((item: any, index: number) => {
+                                  // If product exists in DB, link to it. If deleted, search for the name as a fallback!
+                                  const productSlug = item.product?.slug;
+                                  const itemHref = productSlug ? `/product/${productSlug}` : `/search?q=${encodeURIComponent(item.name)}`;
+
+                                  return (
+                                    <Link key={index} href={itemHref} className="flex items-start gap-3 group" title={item.name}>
+                                      <div className="w-10 h-10 rounded border border-gray-200 overflow-hidden bg-gray-50 shrink-0">
+                                        <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                                      </div>
+                                      <div className="flex flex-col max-w-[180px]">
+                                        <span className="text-[12px] font-medium text-[#1A1A1A] group-hover:text-[#B76E79] transition-colors truncate">
+                                          {item.name}
+                                        </span>
+                                        <span className="text-[10px] text-gray-500 mt-0.5">
+                                          Qty: {item.quantity}
+                                        </span>
+                                      </div>
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            </td>
+
+                            {/* ✅ UPDATED: Date and Time Display */}
+                            <td className="py-5 px-2 align-top">
+                               <div className="text-[13px] text-[#1A1A1A] font-medium">{date}</div>
+                               <div className="text-[11px] text-gray-400 mt-1">{time}</div>
+                            </td>
+
+                            <td className="py-5 px-2 align-top">
                               <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider border ${badgeStyle}`}>
                                 {displayStatus}
                               </span>
                             </td>
-                            <td className="py-5 text-right font-medium text-[#1A1A1A] px-2">
+
+                            <td className="py-5 text-right font-medium text-[#1A1A1A] px-2 align-top">
                               ৳{order.total.toLocaleString("en-IN")}
                             </td>
                           </tr>
