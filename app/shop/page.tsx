@@ -1,5 +1,5 @@
 import Link from "next/link";
-import ProductGrid from "@/components/shop/ProductGrid"; // or ProductGridClient if you use that here
+import ProductGrid from "@/components/shop/ProductGrid"; 
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
 
@@ -43,13 +43,15 @@ export default async function ShopPage() {
       id: p._id.toString(),
       slug: p.slug,
       name: p.name,
-      // Fixes the weird ID string issue:
       category: p.category?.name || "Uncategorized",
-      // Fixes the $NaN issue:
       price: p.basePrice || 0,
       compareAtPrice: p.compareAtPrice,
+      
+      // ✅ NEW: Added rating and sold count mapping here!
+      averageRating: p.averageRating || 0,
+      soldCount: p.soldCount || 0,
+
       badge: p.isOnSale ? "sale" : undefined,
-      // Fixes the broken image issue:
       images: {
         primary: p.primaryImage || p.images?.[0] || { url: "/placeholder.jpg", alt: p.name },
         hover: p.images?.[1] || undefined,

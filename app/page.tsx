@@ -32,6 +32,8 @@ async function getBestSellers(): Promise<ProductCardProps[]> {
       category: p.category?.name || "Uncategorized",
       price: p.basePrice,
       compareAtPrice: p.compareAtPrice,
+      averageRating: p.averageRating || 0, 
+      soldCount: p.soldCount || 0,         
       badge: p.isOnSale ? "sale" : undefined,
       images: {
         primary: p.primaryImage || p.images?.[0] || { url: "", alt: "" },

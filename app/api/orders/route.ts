@@ -125,6 +125,9 @@ export async function POST(request: NextRequest) {
         // Deduct from the total overall stock (Math.max prevents it from ever going into negative numbers)
         product.totalStock = Math.max(0, (product.totalStock || 0) - item.quantity);
 
+        // ✅ NEW: Add to the total sold count!
+        product.soldCount = (product.soldCount || 0) + item.quantity;
+        
         // If the product has color/size variants, deduct from the specific variant as well
         if (product.variants && product.variants.length > 0) {
           if (item.variant) {

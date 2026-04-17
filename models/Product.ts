@@ -130,6 +130,12 @@ const ProductSchema = new Schema(
       min: 0,
     },
 
+    // ✅ NEW: Tracking how many have been sold!
+    soldCount: { 
+      type: Number, 
+      default: 18 
+    },
+
     isFeatured: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },
 

@@ -73,6 +73,7 @@ export default async function ProductDetailPage(props: Props) {
     _id: { $ne: raw._id },
   }).limit(4).lean();
 
+  // ✅ THE FIX IS HERE: We added averageRating and soldCount to the related products!
   const relatedProducts: ProductCardProps[] = relatedRaw.map((p: any) => {
     const pImage = Array.isArray(p.images) && p.images[0]?.url ? p.images[0].url : "/placeholder.jpg";
     return {
@@ -82,6 +83,8 @@ export default async function ProductDetailPage(props: Props) {
       category: categoryName,
       price: p.basePrice || 0,
       compareAtPrice: p.compareAtPrice,
+      averageRating: p.averageRating || 0, // ✅ ADDED
+      soldCount: p.soldCount || 0,         // ✅ ADDED
       images: { primary: { url: pImage, alt: p.name } },
     };
   });
@@ -116,10 +119,10 @@ export default async function ProductDetailPage(props: Props) {
                 category={category}
                 basePrice={raw.basePrice || 0}
                 compareAtPrice={raw.compareAtPrice}
-                currency="BDT" // ✅ FIXED: Changed to BDT
+                currency="BDT" 
                 averageRating={raw.averageRating || 0}
                 reviewCount={raw.reviewCount || 0}
-                totalStock={raw.totalStock ?? 0} // ✅ FIXED: Will now properly pass 0 to the component!
+                totalStock={raw.totalStock ?? 0} 
                 variants={variants}
                 primaryImage={primaryImage}
               />

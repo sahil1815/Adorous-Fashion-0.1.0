@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { Heart, Star } from "lucide-react"; // ✅ Added Star icon
 import { useWishlistStore } from "@/store/useWishlistStore";
 
 // ---------------------------------------------------------------------------
@@ -21,7 +21,10 @@ export interface ProductCardProps {
     hover?:  { url: string; alt: string };
   };
   
-  // --- ADDED THESE BACK TO FIX THE BUILD ERROR ---
+  // ✅ NEW: Added the rating and sold count to the card's data
+  averageRating?: number; 
+  soldCount?: number;
+
   isWishlisted?: boolean;
   onWishlistToggle?: (id: string, wishlisted: boolean) => void;
   badge?: string;
@@ -52,20 +55,19 @@ export function ProductCardSkeleton() {
 }
 
 export default function ProductCard(props: ProductCardProps) {
-  const { id, slug, name, price, compareAtPrice, images } = props;
+  // ✅ Extract the new properties (defaulting to 0 if they haven't loaded yet)
+  const { id, slug, name, price, compareAtPrice, images, averageRating = 0, soldCount = 0 } = props;
   const [hovered, setHovered] = useState(false);
   
-  // 1. ACTIVELY LISTEN TO THE WISHLIST ARRAY
   const wishlistItems = useWishlistStore((state) => state.items);
   const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
   
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    setIsHydrated(true); // Wait for local storage to load
+    setIsHydrated(true); 
   }, []);
 
-  // 2. CHECK IF THIS SPECIFIC ITEM IS IN THE ARRAY
   const wishlisted = isHydrated ? wishlistItems.some((item) => item.id === id) : false;
   
   const onSale = !!(compareAtPrice && compareAtPrice > price);
@@ -100,8 +102,35 @@ export default function ProductCard(props: ProductCardProps) {
 
       <div className="flex flex-col items-center justify-center p-4 md:p-5 text-center">
         <Link href={`/products/${slug}`} className="block w-full">
-          <h3 className="text-[13px] md:text-[14px] text-[#4a4a4a] mb-2 line-clamp-2">{name}</h3>
+          <h3 className="text-[13px] md:text-[14px] text-[#4a4a4a] mb-1.5 line-clamp-2">{name}</h3>
         </Link>
+
+        {/* ✅ NEW: 5-Star Rating, Percentage, and Sold Count */}
+        <div className="flex items-center justify-center gap-1.5 mb-3">
+          <div className="flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star
+                key={star}
+                size={11}
+                className={
+                  star <= Math.round(averageRating)
+                    ? "fill-[#B76E79] stroke-[#B76E79]"
+                    : "fill-transparent stroke-[#1A1A1A]/20"
+                }
+              />
+            ))}
+          </div>
+          {averageRating > 0 && (
+            <span className="text-[10px] text-[#1A1A1A]/50 font-medium">
+              {Math.round((averageRating / 5) * 100)}%
+            </span>
+          )}
+          <span className="text-[#1A1A1A]/20 text-[10px] mx-0.5">•</span>
+          <span className="text-[10px] text-[#1A1A1A]/50 font-medium uppercase tracking-wider">
+            {soldCount} Sold
+          </span>
+        </div>
+
         <div className="flex items-center justify-center gap-1.5 md:gap-2">
           <span className="text-[16px] md:text-[18px] font-bold text-[#1A1A1A]">{formatPrice(price)}</span>
           {onSale && compareAtPrice && <span className="text-[13px] md:text-[14px] text-[#9ca3af] line-through font-medium">{formatPrice(compareAtPrice)}</span>}
