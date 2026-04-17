@@ -5,11 +5,14 @@ import Link from "next/link";
 import { ChevronRight, Lock } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 
+// ✅ Updated props to accept the autofill data from the database
 interface CheckoutFormProps {
-  userName: string;
+  initialName: string;
+  initialEmail: string;
+  initialPhone: string;
 }
 
-export default function CheckoutForm({ userName }: CheckoutFormProps) {
+export default function CheckoutForm({ initialName, initialEmail, initialPhone }: CheckoutFormProps) {
   const store = useCartStore();
   const cartItems = (store as any).items || (store as any).cart || [];
 
@@ -17,9 +20,8 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
     (total: number, item: any) => total + item.price * item.quantity,
     0,
   );
-
-  // ✅ Shipping is set to 0 here because the admin will update it manually later
-  const shipping = 0;
+  
+  const shipping = 0; // Calculated manually by admin later
   const total = subtotal;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,13 +40,11 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
         phone: formData.get("phone"),
       },
       shippingAddress: {
-        firstName: formData.get("firstName"),
-        lastName: formData.get("lastName"),
+        // ✅ Merged into a single fullName field
+        fullName: formData.get("fullName"),
         address: formData.get("address"),
-        apartment: formData.get("apartment"),
-        city: formData.get("city"),
-        state: formData.get("state"),
-        postalCode: formData.get("postalCode"),
+        city: formData.get("city"), // Used for District/জেলা
+        state: formData.get("state"), // Used for Sub-district/উপজেলা
       },
       items: cartItems,
       subtotal,
@@ -65,8 +65,8 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
         setMessage(
           `Order placed successfully! Your Order ID is ${data.orderNumber}`,
         );
-        // If you have a clear cart function in your store, you can uncomment this:
-        // (store as any).clearCart();
+        // If you want to clear the cart after successful order, you can call it here:
+        // store.clearCart(); 
       } else {
         setMessage("Something went wrong. Please try again.");
       }
@@ -89,7 +89,7 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
             <Lock size={12} className="mr-2" /> Secure Checkout
           </div>
           <div className="text-sm text-[#1A1A1A]/70">
-            Signed in as {userName}
+            Signed in as {initialName}
           </div>
         </div>
 
@@ -116,10 +116,11 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
                   Contact Information
                 </h2>
                 <div className="grid grid-cols-1 gap-4">
+                  {/* ✅ Autofilled Contact Info */}
                   <input
                     type="email"
                     name="email"
-                    defaultValue=""
+                    defaultValue={initialEmail}
                     required
                     placeholder="Email address"
                     className={inputStyles}
@@ -127,7 +128,7 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
                   <input
                     type="tel"
                     name="phone"
-                    defaultValue=""
+                    defaultValue={initialPhone}
                     required
                     placeholder="Phone number"
                     className={inputStyles}
@@ -140,52 +141,35 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
                   Shipping Address
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* ✅ Single Full Name input (Autofilled) */}
                   <input
                     type="text"
-                    name="firstName"
+                    name="fullName"
+                    defaultValue={initialName}
                     required
-                    placeholder="First name"
-                    className={inputStyles}
+                    placeholder="Full name"
+                    className={`${inputStyles} sm:col-span-2`}
                   />
-                  <input
-                    type="text"
-                    name="lastName"
-                    required
-                    placeholder="Last name"
-                    className={inputStyles}
-                  />
+                  {/* ✅ BD-Friendly Placeholders */}
                   <input
                     type="text"
                     name="address"
                     required
-                    placeholder="Address"
-                    className={`${inputStyles} sm:col-span-2`}
-                  />
-                  <input
-                    type="text"
-                    name="apartment"
-                    placeholder="Apartment, suite, etc. (optional)"
+                    placeholder="Full Address"
                     className={`${inputStyles} sm:col-span-2`}
                   />
                   <input
                     type="text"
                     name="city"
                     required
-                    placeholder="City"
+                    placeholder="District / জেলা"
                     className={inputStyles}
                   />
                   <input
                     type="text"
                     name="state"
                     required
-                    placeholder="State / Province"
-                    className={inputStyles}
-                  />
-                  <input
-                    type="text"
-                    name="postalCode"
-                    required
-                    placeholder="Postal code"
+                    placeholder="Sub-district / উপজেলা"
                     className={inputStyles}
                   />
                 </div>
@@ -240,39 +224,34 @@ export default function CheckoutForm({ userName }: CheckoutFormProps) {
                 </div>
                 <div className="flex items-center justify-between text-sm text-[#1A1A1A]/70">
                   <span>Subtotal</span>
-                  <span>৳{subtotal.toFixed(2)}</span>
+                  <span>৳{subtotal.toLocaleString("en-IN")}</span>
                 </div>
-
-                {/* ✅ UPDATED SHIPPING UI */}
+                
                 <div className="flex items-center justify-between text-sm text-[#1A1A1A]/70">
                   <span>Shipping</span>
-                  <span className="italic text-[#B76E79]">
-                    Calculated at confirmation
-                  </span>
+                  <span className="italic text-[#B76E79]">Calculated at confirmation</span>
                 </div>
-
+                
                 <div className="border-t border-[#1A1A1A]/10 pt-4">
                   <div className="flex items-center justify-between text-base font-semibold text-[#1A1A1A]">
                     <span>Total</span>
-                    <span>৳{total.toFixed(2)}</span>
+                    <span>৳{total.toLocaleString("en-IN")}</span>
                   </div>
-
-                  {/* ✅ BEAUTIFUL DISCLAIMER TEXT & RATES */}
+                  
                   <div className="mt-3 flex flex-col items-end text-right">
                     <p className="text-[10px] uppercase tracking-[0.1em] text-[#1A1A1A]/50 mb-1.5">
                       + Shipping fees will be added by our team
                     </p>
                     <div className="inline-block rounded-sm bg-[#F7E7CE]/20 px-2.5 py-1.5 border border-[#F7E7CE]/50">
                       <p className="text-[9px] uppercase tracking-[0.1em] text-[#1A1A1A]/70 font-medium">
-                        Inside Dhaka:{" "}
-                        <span className="text-[#B76E79] font-bold">৳80</span>
-                        <span className="mx-1.5 text-[#1A1A1A]/20">|</span>
-                        Outside Dhaka:{" "}
-                        <span className="text-[#B76E79] font-bold">৳130</span>
+                        Inside Dhaka: <span className="text-[#B76E79] font-bold">৳80</span> 
+                        <span className="mx-1.5 text-[#1A1A1A]/20">|</span> 
+                        Outside Dhaka: <span className="text-[#B76E79] font-bold">৳130</span>
                       </p>
                     </div>
                   </div>
                 </div>
+
               </div>
             </div>
           </aside>
