@@ -1,21 +1,25 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Product from "@/models/Product";
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  // ✅ FIXED: In newer Next.js versions, params is a Promise
+  context: { params: Promise<{ id: string }> } 
 ) {
   try {
+    // ✅ FIXED: We must await the params before we can read the ID
+    const { id } = await context.params; 
+
     await connectDB();
     const { stock } = await request.json();
 
-    const product = await Product.findById(params.id);
+    const product = await Product.findById(id);
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    // Update totalStock directly AND update the first variant's stock to keep them perfectly synced
+    // Update totalStock directly AND update the first variant's stock
     product.totalStock = stock;
     if (product.variants && product.variants.length > 0) {
       product.variants[0].stock = stock;
