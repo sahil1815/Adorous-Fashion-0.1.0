@@ -1,18 +1,17 @@
-// app/admin/products/page.tsx
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Edit } from "lucide-react"; // Removed Trash2 from here
+import { Plus, Edit } from "lucide-react"; 
 import connectDB from "@/lib/mongodb";
 import Product from "@/models/Product";
-import DeleteButton from "./DeleteButton"; // IMPORT YOUR NEW BUTTON
+import DeleteButton from "./DeleteButton"; 
+import StockEditor from "./StockEditor"; // ✅ New stock editor component
 
 // Ensures Category model is registered before we populate it
 import "@/models/Category";
 
-export const dynamic = "force-dynamic"; // Ensures the page always fetches fresh data
+export const dynamic = "force-dynamic";
 
 export default async function AdminProducts() {
-  // Connect to the database and fetch all products, newest first
   await connectDB();
   const rawProducts = await Product.find()
     .populate("category", "name")
@@ -21,7 +20,6 @@ export default async function AdminProducts() {
 
   return (
     <div className="p-10">
-      {/* Header section with Add Product button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
           <h1
@@ -43,7 +41,6 @@ export default async function AdminProducts() {
         </Link>
       </div>
 
-      {/* Inventory Table */}
       <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-gray-600">
@@ -52,7 +49,7 @@ export default async function AdminProducts() {
                 <th className="px-6 py-4 font-medium">Product</th>
                 <th className="px-6 py-4 font-medium">Category</th>
                 <th className="px-6 py-4 font-medium">Price</th>
-                <th className="px-6 py-4 font-medium">Stock</th>
+                <th className="px-6 py-4 font-medium min-w-[140px]">Stock</th>
                 <th className="px-6 py-4 font-medium">Status</th>
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
@@ -60,13 +57,13 @@ export default async function AdminProducts() {
             <tbody className="divide-y divide-gray-200">
               {rawProducts.length > 0 ? (
                 rawProducts.map((product: any) => {
-                  // Safely extract properties based on your DB schema
                   const imageUrl = product.images?.[0]?.url;
                   const imageAlt = product.images?.[0]?.alt || product.name;
-                  const categoryName =
-                    product.category?.name || "Uncategorized";
+                  const categoryName = product.category?.name || "Uncategorized";
                   const price = product.basePrice || 0;
-                  const stock = product.stock || 0; 
+                  
+                  // ✅ FIXED: Look at totalStock or the first variant's stock
+                  const stock = product.totalStock || (product.variants?.[0]?.stock) || 0; 
 
                   return (
                     <tr
@@ -95,14 +92,15 @@ export default async function AdminProducts() {
                         {categoryName}
                       </td>
                       <td className="px-6 py-4 text-[#1A1A1A] font-medium">
-                        ${price.toFixed(2)}
+                        {/* ✅ FIXED: Currency is now ৳ */}
+                        ৳{price.toLocaleString("en-IN")}
                       </td>
                       <td className="px-6 py-4">
-                        <span
-                          className={`${stock === 0 ? "text-red-500 font-medium" : "text-[#1A1A1A]"}`}
-                        >
-                          {stock > 0 ? `${stock} in stock` : "Out of stock"}
-                        </span>
+                        {/* ✅ FIXED: Injecting the new StockEditor so you can change it inline! */}
+                        <StockEditor 
+                          productId={product._id.toString()} 
+                          initialStock={stock} 
+                        />
                       </td>
                       <td className="px-6 py-4">
                         <span
@@ -122,10 +120,7 @@ export default async function AdminProducts() {
                           >
                             <Edit size={16} />
                           </Link>
-                          
-                          {/* USE THE NEW COMPONENT HERE */}
                           <DeleteButton productId={product._id.toString()} />
-                          
                         </div>
                       </td>
                     </tr>
