@@ -64,10 +64,13 @@ export default function AboutPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center mb-24 md:mb-32">
           <div className="relative aspect-[4/5] bg-[#F7E7CE]/30 w-full overflow-hidden">
             <Image
-              src="https://ik.imagekit.io/adorousfashion/IMG_5825.HEIC?updatedAt=1775814170351&tr=f-auto,w-800,q-80"
+              src="https://ik.imagekit.io/adorousfashion/IMG_5822.HEIC?updatedAt=1775814139786&tr=f-auto,w-800,q-80"
               alt="Adorous craftsmanship"
               fill
               className="object-cover"
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
+              unoptimized // ✅ THE FIX: Tells Vercel not to panic over the .HEIC extension!
             />
           </div>
           <div className="space-y-6">
