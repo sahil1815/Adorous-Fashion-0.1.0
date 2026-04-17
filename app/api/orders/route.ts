@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Order from "@/models/Order";
+import Product from "@/models/Product"; // ✅ IMPORTED the Product model so we can edit stock!
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
 
     const query: any = {};
     if (email) {
-      query.customerEmail = email;
+      query.guestEmail = email; 
     } else if (userId) {
       query.user = userId;
     } else {
@@ -91,18 +92,18 @@ export async function POST(request: NextRequest) {
     const random = Math.floor(Math.random() * 100000).toString().padStart(5, "0");
     const orderNumber = `ADR-${date}-${random}`;
 
+    // 1. Create the official order receipt in the database
     const order = await Order.create({
       orderNumber, 
       user: userId || null, 
       guestEmail: customer.email, 
       shippingAddress: {
-        // ✅ Direct mapping from the new BD-friendly form
         fullName: shippingAddress.fullName,
         line1: shippingAddress.address, 
-        line2: "", // We removed apartment, so this is empty
+        line2: "", 
         city: shippingAddress.city,
         state: shippingAddress.state, 
-        postalCode: "", // We removed postalCode, so this is empty
+        postalCode: "", 
         country: "BD",
         phone: customer.phone,
       },
@@ -114,6 +115,36 @@ export async function POST(request: NextRequest) {
       paymentStatus: "pending",
       status: "processing", 
     });
+
+    // ✅ 2. THE MAGIC: AUTOMATICALLY DEDUCT STOCK
+    for (const item of formattedItems) {
+      // Find the specific product in the database
+      const product = await Product.findById(item.product);
+      
+      if (product) {
+        // Deduct from the total overall stock (Math.max prevents it from ever going into negative numbers)
+        product.totalStock = Math.max(0, (product.totalStock || 0) - item.quantity);
+
+        // If the product has color/size variants, deduct from the specific variant as well
+        if (product.variants && product.variants.length > 0) {
+          if (item.variant) {
+            // Find the exact variant the user bought
+            const variantToUpdate = product.variants.find(
+              (v: any) => v._id.toString() === item.variant.toString()
+            );
+            if (variantToUpdate) {
+              variantToUpdate.stock = Math.max(0, (variantToUpdate.stock || 0) - item.quantity);
+            }
+          } else {
+            // If no specific variant was passed, just deduct from the first one to keep things synced
+            product.variants[0].stock = Math.max(0, (product.variants[0].stock || 0) - item.quantity);
+          }
+        }
+
+        // Save the freshly updated stock back to the database!
+        await product.save();
+      }
+    }
 
     return NextResponse.json(
       {
