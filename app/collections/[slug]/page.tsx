@@ -6,6 +6,7 @@ import Product from "@/models/Product";
 import ProductGridClient from "@/components/shop/ProductGridClient";
 import type { ProductCardProps } from "@/components/shop/ProductCard";
 
+
 // 1. Force Next.js to bypass the cache and fetch fresh data every time
 export const dynamic = "force-dynamic";
 

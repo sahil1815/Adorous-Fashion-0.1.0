@@ -11,6 +11,8 @@ import Link from "next/link";
 import connectDB from "@/lib/mongodb";
 import Product from "@/models/Product";
 
+export const dynamic = "force-dynamic";
+
 // ---------------------------------------------------------------------------
 // Fetch Best Selling products from database
 // ---------------------------------------------------------------------------

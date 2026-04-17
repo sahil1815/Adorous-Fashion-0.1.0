@@ -3,6 +3,8 @@ import ProductGrid from "@/components/shop/ProductGrid";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Shop | Adorous Fashion",
   description: "Browse our complete collection of premium fashion pieces.",
