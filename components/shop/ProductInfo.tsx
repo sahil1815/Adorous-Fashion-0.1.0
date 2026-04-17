@@ -1,12 +1,5 @@
 "use client";
 
-/**
- * ProductInfo.tsx
- *
- * The right-hand panel on the Product Detail Page.
- * All interactive — swatches, quantity, add-to-cart, wishlist, accordion.
- */
-
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import {
@@ -21,15 +14,12 @@ import {
   RotateCcw,
   ShieldCheck,
   ChevronRight,
+  Flame // ✅ Added for urgency icons
 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
-import { useWishlistStore } from "@/store/useWishlistStore"; // <-- ADDED THIS FOR WISHLIST!
+import { useWishlistStore } from "@/store/useWishlistStore"; 
 import ProductAccordion from "@/components/shop/ProductAccordion";
 import type { AccordionItem } from "@/components/shop/ProductAccordion";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export interface ProductVariantData {
   id: string;
@@ -61,24 +51,15 @@ export interface ProductInfoProps {
   careInstructions?: string;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 function formatPrice(amount: number, currency?: string) {
   return "৳" + amount.toLocaleString("en-IN", {
     maximumFractionDigits: 0,
   });
 }
 
-
 function getSavings(price: number, compare: number) {
   return Math.round(((compare - price) / compare) * 100);
 }
-
-// ---------------------------------------------------------------------------
-// Star rating display
-// ---------------------------------------------------------------------------
 
 function StarRating({ rating, count }: { rating: number; count: number }) {
   return (
@@ -103,10 +84,6 @@ function StarRating({ rating, count }: { rating: number; count: number }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main component
-// ---------------------------------------------------------------------------
-
 export default function ProductInfo({
   id,
   slug,
@@ -116,7 +93,7 @@ export default function ProductInfo({
   category,
   basePrice,
   compareAtPrice,
-  currency = "USD",
+  currency = "BDT", // Defaulted to BDT
   averageRating,
   reviewCount,
   totalStock,
@@ -126,7 +103,6 @@ export default function ProductInfo({
   dimensions,
   careInstructions,
 }: ProductInfoProps) {
-  // ── Resolve colour swatches from variants ─────────────────────────────────
   const colorVariants = variants.filter((v) => v.attributes?.color);
   const hasSwatches   = colorVariants.length > 0;
 
@@ -138,8 +114,6 @@ export default function ProductInfo({
   const [shared, setShared]         = useState(false);
 
   const { addItem, openCart } = useCartStore();
-  
-  // ── 5. FIXED WISHLIST LOGIC ───────────────────────────────────────────────
   const wishlistItems = useWishlistStore((state) => state.items);
   const toggleWishlist = useWishlistStore((state) => state.toggleWishlist);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -150,14 +124,51 @@ export default function ProductInfo({
 
   const wishlisted = isHydrated ? wishlistItems.some((item) => item.id === id) : false;
 
-  // Active price (variant overrides base)
   const activePrice       = selectedVariant?.price       ?? basePrice;
   const activeCompare     = selectedVariant?.compareAtPrice ?? compareAtPrice;
   const activeStock       = selectedVariant?.stock ?? totalStock;
   const onSale            = !!(activeCompare && activeCompare > activePrice);
   const isSoldOut         = activeStock === 0;
   const savingsPct        = onSale && activeCompare ? getSavings(activePrice, activeCompare) : 0;
-  const lowStock          = activeStock > 0 && activeStock <= 5;
+
+  // ✅ BEAUTIFULLY TIERED URGENCY SYSTEM
+  let stockMessage = null;
+  if (isSoldOut) {
+    stockMessage = (
+      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 rounded-sm border border-gray-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-pulse"></span>
+        <span className="text-[10px] tracking-[0.1em] uppercase font-semibold text-gray-600">
+          Out of Stock
+        </span>
+      </div>
+    );
+  } else if (activeStock <= 5) {
+    stockMessage = (
+      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 rounded-sm border border-red-100">
+        <Flame size={12} className="text-red-500 animate-bounce" />
+        <span className="text-[10px] tracking-[0.1em] uppercase font-semibold text-red-600">
+          Almost Gone — Only {activeStock} left
+        </span>
+      </div>
+    );
+  } else if (activeStock <= 20) {
+    stockMessage = (
+      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 rounded-sm border border-orange-100">
+        <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+        <span className="text-[10px] tracking-[0.1em] uppercase font-semibold text-orange-600">
+          Selling Fast — {activeStock} available
+        </span>
+      </div>
+    );
+  } else if (activeStock <= 50) {
+    stockMessage = (
+      <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F7E7CE]/20 rounded-sm border border-[#F7E7CE]">
+        <span className="text-[10px] tracking-[0.1em] uppercase font-semibold text-[#B76E79]">
+          High Demand — Secure yours today
+        </span>
+      </div>
+    );
+  }
 
   const handleWishlist = useCallback(() => {
     toggleWishlist({
@@ -171,7 +182,6 @@ export default function ProductInfo({
     });
   }, [id, slug, name, category.name, activePrice, activeCompare, primaryImage, toggleWishlist]);
 
-  // ── Add to cart ───────────────────────────────────────────────────────────
   const handleAddToCart = useCallback(() => {
     if (isSoldOut) return;
     addItem({
@@ -191,7 +201,6 @@ export default function ProductInfo({
     }, 1000);
   }, [id, name, slug, primaryImage, activePrice, quantity, selectedVariant, isSoldOut, addItem, openCart]);
 
-  // ── Share ─────────────────────────────────────────────────────────────────
   const handleShare = useCallback(async () => {
     const url = window.location.href;
     if (navigator.share) {
@@ -203,7 +212,6 @@ export default function ProductInfo({
     }
   }, [name]);
 
-  // ── Accordion content ─────────────────────────────────────────────────────
   const accordionItems: AccordionItem[] = [
     {
       id: "details",
@@ -232,10 +240,9 @@ export default function ProductInfo({
     },
     {
       id: "shipping",
-      label: "Shipping & Exchanges", // Updated title
+      label: "Shipping & Exchanges",
       content: (
         <div className="space-y-2">
-          {/* 3 & 4. UPDATED FANCY TEXT AND ৳2000 THRESHOLD */}
           <p>Complimentary standard shipping on all orders over ৳2000.</p>
           <p>Express delivery (2–3 business days) is available at checkout.</p>
           <p>We gladly offer exchanges within 30 days of purchase, provided the piece remains in its pristine, original condition.</p>
@@ -255,7 +262,6 @@ export default function ProductInfo({
   return (
     <div className="flex flex-col gap-7">
 
-      {/* ── Breadcrumb ────────────────────────────────────────────────────── */}
       <nav aria-label="Breadcrumb">
         <ol className="flex items-center gap-1.5 flex-wrap">
           {[
@@ -284,7 +290,6 @@ export default function ProductInfo({
         </ol>
       </nav>
 
-      {/* ── Name + rating ─────────────────────────────────────────────────── */}
       <div className="space-y-3">
         <h1
           className="text-3xl md:text-4xl font-light leading-tight text-[#1A1A1A] tracking-wide"
@@ -302,7 +307,6 @@ export default function ProductInfo({
         )}
       </div>
 
-      {/* ── Price ─────────────────────────────────────────────────────────── */}
       <div className="flex items-baseline gap-3 flex-wrap">
         <span
           className={`text-2xl font-light tracking-wide ${onSale ? "text-[#B76E79]" : "text-[#1A1A1A]"}`}
@@ -322,10 +326,8 @@ export default function ProductInfo({
         )}
       </div>
 
-      {/* ── Divider ───────────────────────────────────────────────────────── */}
       <hr className="border-[#1A1A1A]/08" />
 
-      {/* ── Color swatches ────────────────────────────────────────────────── */}
       {hasSwatches && (
         <div className="space-y-3">
           <p className="text-[11px] tracking-[0.18em] uppercase text-[#1A1A1A]/60">
@@ -337,7 +339,6 @@ export default function ProductInfo({
           <div className="flex items-center gap-2.5 flex-wrap" role="radiogroup" aria-label="Select color">
             {colorVariants.map((variant) => {
               const color = variant.attributes.color;
-              // Map colour names to hex for the swatch dot
               const colorHex: Record<string, string> = {
                 "Rose Gold": "#C5977D",
                 "Gold":      "#C9A84C",
@@ -369,7 +370,6 @@ export default function ProductInfo({
                   style={{ backgroundColor: hex }}
                   title={color}
                 >
-                  {/* Sold-out diagonal line */}
                   {soldOut && (
                     <span className="absolute inset-0 flex items-center justify-center">
                       <span className="block w-[130%] h-px bg-[#1A1A1A]/40 rotate-45" />
@@ -382,27 +382,26 @@ export default function ProductInfo({
         </div>
       )}
 
-      {/* ── Quantity stepper ──────────────────────────────────────────────── */}
       <div className="space-y-3">
         <p className="text-[11px] tracking-[0.18em] uppercase text-[#1A1A1A]/60">
           Quantity
         </p>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center border border-[#1A1A1A]/20 rounded-sm">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center border border-[#1A1A1A]/20 rounded-sm bg-white">
             <button
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              disabled={quantity <= 1}
+              disabled={quantity <= 1 || isSoldOut}
               className="w-10 h-10 flex items-center justify-center text-[#1A1A1A]/50 hover:text-[#1A1A1A] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Decrease quantity"
             >
               <Minus size={13} strokeWidth={2} />
             </button>
             <span className="w-10 text-center text-[14px] font-medium text-[#1A1A1A] select-none">
-              {quantity}
+              {isSoldOut ? 0 : quantity}
             </span>
             <button
               onClick={() => setQuantity((q) => Math.min(activeStock, q + 1))}
-              disabled={quantity >= activeStock}
+              disabled={quantity >= activeStock || isSoldOut}
               className="w-10 h-10 flex items-center justify-center text-[#1A1A1A]/50 hover:text-[#1A1A1A] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               aria-label="Increase quantity"
             >
@@ -410,22 +409,12 @@ export default function ProductInfo({
             </button>
           </div>
 
-          {/* Stock status */}
-          {isSoldOut ? (
-            <span className="text-[11px] tracking-[0.1em] uppercase text-[#1A1A1A]/40">
-              Out of Stock
-            </span>
-          ) : lowStock ? (
-            <span className="text-[11px] tracking-[0.1em] uppercase text-[#B76E79]">
-              Only {activeStock} left
-            </span>
-          ) : null}
+          {/* ✅ RENDER THE NEW TIERED STOCK MESSAGE HERE */}
+          {stockMessage}
         </div>
       </div>
 
-      {/* ── CTA row ───────────────────────────────────────────────────────── */}
       <div className="flex gap-3">
-        {/* Add to Cart */}
         <button
           onClick={handleAddToCart}
           disabled={isSoldOut}
@@ -436,7 +425,7 @@ export default function ProductInfo({
             transition-all duration-300
             focus:outline-none focus-visible:ring-2 focus-visible:ring-[#B76E79] focus-visible:ring-offset-1
             ${isSoldOut
-              ? "bg-[#1A1A1A]/20 text-[#1A1A1A]/40 cursor-not-allowed"
+              ? "bg-[#1A1A1A]/10 text-[#1A1A1A]/40 cursor-not-allowed border border-[#1A1A1A]/10"
               : added
               ? "bg-[#B76E79] text-white"
               : "bg-[#1A1A1A] text-[#F7E7CE] hover:bg-[#B76E79]"}
@@ -445,11 +434,10 @@ export default function ProductInfo({
           {added
             ? <><Check size={14} strokeWidth={2.5} /> Added to Bag</>
             : isSoldOut
-            ? "Sold Out"
+            ? "Out of Stock"
             : <><ShoppingBag size={14} strokeWidth={1.8} /> Add to Bag</>}
         </button>
 
-        {/* 5. FIXED WISHLIST BUTTON */}
         <button
           onClick={handleWishlist}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
@@ -472,7 +460,6 @@ export default function ProductInfo({
           />
         </button>
 
-        {/* Share */}
         <button
           onClick={handleShare}
           aria-label="Share this product"
@@ -490,10 +477,8 @@ export default function ProductInfo({
         </button>
       </div>
 
-      {/* ── Trust badges ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-3 py-4 border-y border-[#1A1A1A]/08">
         {[
-          // 1 & 2. UPDATED BADGE TEXT AND THRESHOLDS
           { icon: <Truck size={15} strokeWidth={1.5} />,       label: "Free shipping", sub: "on orders over ৳2000" },
           { icon: <RotateCcw size={15} strokeWidth={1.5} />,   label: "Exchanges",     sub: "Available within 30 days" },
           { icon: <ShieldCheck size={15} strokeWidth={1.5} />, label: "Authentic",     sub: "guaranteed" },
@@ -508,7 +493,6 @@ export default function ProductInfo({
         ))}
       </div>
 
-      {/* ── Accordion ─────────────────────────────────────────────────────── */}
       <ProductAccordion items={accordionItems} defaultOpen="details" />
     </div>
   );

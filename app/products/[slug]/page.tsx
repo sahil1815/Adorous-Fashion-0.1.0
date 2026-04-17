@@ -15,7 +15,6 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
   await connectDB();
   
-  // Case-insensitive search
   const product = await Product.findOne({ 
     slug: { $regex: new RegExp(`^${params.slug}$`, "i") } 
   }).lean();
@@ -32,22 +31,18 @@ export default async function ProductDetailPage(props: Props) {
   const params = await props.params;
   await connectDB();
 
-  // 1. Fetch main product with Case-Insensitive Regex
   const raw = await Product.findOne({ 
     slug: { $regex: new RegExp(`^${params.slug}$`, "i") } 
   })
     .populate("category", "name slug")
     .lean();
 
-  // If it truly doesn't exist, show the standard 404 page
   if (!raw) notFound();
 
-  // 2. Bulletproof Category Fallback
   const categoryName = raw.category?.name || "Uncategorized";
   const categorySlug = raw.category?.slug || "uncategorized";
   const category = { name: categoryName, slug: categorySlug };
 
-  // 3. Bulletproof Image Array
   let galleryImages = [];
   if (Array.isArray(raw.images) && raw.images.length > 0) {
     galleryImages = raw.images.map((img: any) => ({
@@ -64,7 +59,6 @@ export default async function ProductDetailPage(props: Props) {
   }
   const primaryImage = galleryImages[0];
 
-  // 4. Bulletproof Variants Fallback
   const variants = Array.isArray(raw.variants) ? raw.variants.map((v: any) => ({
     id: v._id?.toString() || Math.random().toString(),
     sku: v.sku || "",
@@ -74,7 +68,6 @@ export default async function ProductDetailPage(props: Props) {
     attributes: v.attributes || {},
   })) : [];
 
-  // 5. Fetch related products safely
   const relatedRaw = await Product.find({
     category: raw.category?._id || raw.category, 
     _id: { $ne: raw._id },
@@ -94,27 +87,26 @@ export default async function ProductDetailPage(props: Props) {
   });
 
   return (
-    // FIX: Added bg-white and min-h-screen to override system dark mode!
     <main className="bg-white min-h-screen text-[#1A1A1A]">
       <div className="max-w-[1400px] mx-auto px-6 md:px-10 pt-40 pb-20">
         
-        {/* UI IMPROVEMENT: Added clean Breadcrumb Navigation */}
         <nav className="flex items-center space-x-2 text-[10px] uppercase tracking-[0.2em] text-[#1A1A1A]/50 mb-8">
           <a href="/" className="hover:text-[#B76E79] transition-colors">Home</a>
           <span>/</span>
           <a href="/shop" className="hover:text-[#B76E79] transition-colors">Shop</a>
           <span>/</span>
+          <a href={`/shop?category=${categorySlug}`} className="hover:text-[#B76E79] transition-colors">{categoryName}</a>
+          <span>/</span>
           <span className="text-[#1A1A1A] font-medium">{raw.name}</span>
         </nav>
 
-        {/* ── Hero: gallery + info ─────────────────────────────────────────── */}
         <section className="pb-10 md:pb-14">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16 items-start">
             <div className="md:sticky md:top-32">
               <ProductGallery images={galleryImages} productName={raw.name} />
             </div>
             
-            <div className="pt-2"> {/* Slight padding to align with image */}
+            <div className="pt-2"> 
               <ProductInfo
                 id={raw._id.toString()}
                 slug={raw.slug}
@@ -124,10 +116,10 @@ export default async function ProductDetailPage(props: Props) {
                 category={category}
                 basePrice={raw.basePrice || 0}
                 compareAtPrice={raw.compareAtPrice}
-                currency="USD"
+                currency="BDT" // ✅ FIXED: Changed to BDT
                 averageRating={raw.averageRating || 0}
                 reviewCount={raw.reviewCount || 0}
-                totalStock={raw.totalStock || 10}
+                totalStock={raw.totalStock ?? 0} // ✅ FIXED: Will now properly pass 0 to the component!
                 variants={variants}
                 primaryImage={primaryImage}
               />
@@ -135,7 +127,6 @@ export default async function ProductDetailPage(props: Props) {
           </div>
         </section>
 
-        {/* ── Related products ─────────────────────────────────────────────── */}
         {relatedProducts.length > 0 && (
           <section className="py-14 border-t border-[#1A1A1A]/10 mt-6">
             <div className="flex items-end justify-between mb-10">
