@@ -187,24 +187,24 @@ export default function CheckoutForm({ initialName, initialEmail, initialPhone }
                   />
                   <input
                     type="text"
-                    name="address"
-                    required
-                    placeholder="Full Address"
-                    className={`${inputStyles} sm:col-span-2`}
-                  />
-                  <input
-                    type="text"
                     name="city"
                     required
-                    placeholder="District / জেলা"
+                    placeholder="Zilla"
                     className={inputStyles}
                   />
                   <input
                     type="text"
                     name="state"
                     required
-                    placeholder="Sub-district / উপজেলা"
+                    placeholder="Upazilla/City"
                     className={inputStyles}
+                  />
+                  <input
+                    type="text"
+                    name="address"
+                    required
+                    placeholder="Full Address"
+                    className={`${inputStyles} sm:col-span-2`}
                   />
                 </div>
               </section>
