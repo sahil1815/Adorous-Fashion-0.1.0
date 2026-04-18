@@ -3,9 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import User from "@/models/User";
 import crypto from "crypto";
-import { Resend } from "resend";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from "nodemailer";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,12 +26,20 @@ export async function POST(req: NextRequest) {
     user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
     await user.save();
 
-    // 3. Send the email
+    // 3. Set up Nodemailer to use your Gmail
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER, // Your Gmail address
+        pass: process.env.EMAIL_PASS, // Your 16-digit App Password
+      },
+    });
+
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
-    // ✅ FIXED: We must extract "error" to see if Resend rejected it
-    const { data, error } = await resend.emails.send({
-      from: "Adorous Fashion <onboarding@resend.dev>", 
+    // 4. Send the email
+    await transporter.sendMail({
+      from: `"Adorous Fashion" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: "Password Reset Request - Adorous",
       html: `
@@ -46,16 +52,10 @@ export async function POST(req: NextRequest) {
       `,
     });
 
-    // ✅ FIXED: If Resend fails, throw the error back to the frontend
-    if (error) {
-      console.error("Resend API Error:", error);
-      return NextResponse.json({ error: "Failed to send email via Resend. Check your API keys and verified emails." }, { status: 400 });
-    }
-
     return NextResponse.json({ message: "Reset link sent successfully." });
 
   } catch (error: any) {
     console.error("FORGOT_PASSWORD_ERROR", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to send email. Please try again later." }, { status: 500 });
   }
 }
