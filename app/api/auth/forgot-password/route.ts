@@ -14,7 +14,6 @@ export async function POST(req: NextRequest) {
 
     const user = await User.findOne({ email: email.toLowerCase() });
 
-    // For security, don't tell the user if the email doesn't exist
     if (!user) {
       return NextResponse.json({ message: "If an account exists, a reset link has been sent." });
     }
@@ -26,14 +25,15 @@ export async function POST(req: NextRequest) {
     const hashedToken = crypto.createHash("sha256").update(resetToken).digest("hex");
     
     user.resetPasswordToken = hashedToken;
-    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour from now
+    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
     await user.save();
 
     // 3. Send the email
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
-    await resend.emails.send({
-      from: "Adorous Fashion <onboarding@resend.dev>", // Note: Use your verified domain in production
+    // ✅ FIXED: We must extract "error" to see if Resend rejected it
+    const { data, error } = await resend.emails.send({
+      from: "Adorous Fashion <onboarding@resend.dev>", 
       to: user.email,
       subject: "Password Reset Request - Adorous",
       html: `
@@ -45,6 +45,12 @@ export async function POST(req: NextRequest) {
         </div>
       `,
     });
+
+    // ✅ FIXED: If Resend fails, throw the error back to the frontend
+    if (error) {
+      console.error("Resend API Error:", error);
+      return NextResponse.json({ error: "Failed to send email via Resend. Check your API keys and verified emails." }, { status: 400 });
+    }
 
     return NextResponse.json({ message: "Reset link sent successfully." });
 
