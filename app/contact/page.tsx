@@ -2,20 +2,50 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Mail, Phone, MapPin, Clock, Send } from "lucide-react";
+import { ChevronLeft, Mail, Phone, MapPin, Send } from "lucide-react";
 
 export default function ContactPage() {
-  const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+  
+  // State to hold the data the user types
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    orderId: "",
+    message: ""
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("loading");
-    
-    // Simulating a network request for the UI
-    // Later, you can connect this to Nodemailer/Resend just like the Forgot Password page!
-    setTimeout(() => {
-      setStatus("success");
-    }, 1500);
+    setErrorMessage("");
+
+    try {
+      // Send the data to our new API!
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setStatus("success");
+        // Clear the form for the next time
+        setFormData({ name: "", email: "", orderId: "", message: "" });
+      } else {
+        const data = await response.json();
+        setStatus("error");
+        setErrorMessage(data.error || "Failed to send message.");
+      }
+    } catch (error) {
+      setStatus("error");
+      setErrorMessage("A network error occurred. Please try again.");
+    }
   };
 
   return (
@@ -114,6 +144,13 @@ export default function ContactPage() {
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   
+                  {/* Error Message */}
+                  {status === "error" && (
+                    <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                      {errorMessage}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Name */}
                     <div>
@@ -124,7 +161,9 @@ export default function ContactPage() {
                         id="name"
                         type="text"
                         required
-                        placeholder="Jane Doe"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Sidratul Muntaha"
                         className="w-full rounded-lg border border-[#D8C2B6] bg-[#FCFBFA] px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-[#B76E79] focus:bg-white"
                       />
                     </div>
@@ -138,7 +177,9 @@ export default function ContactPage() {
                         id="email"
                         type="email"
                         required
-                        placeholder="you@example.com"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="you@gmail.com"
                         className="w-full rounded-lg border border-[#D8C2B6] bg-[#FCFBFA] px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-[#B76E79] focus:bg-white"
                       />
                     </div>
@@ -152,6 +193,8 @@ export default function ContactPage() {
                     <input
                       id="orderId"
                       type="text"
+                      value={formData.orderId}
+                      onChange={handleChange}
                       placeholder="e.g. ADR-20260417"
                       className="w-full rounded-lg border border-[#D8C2B6] bg-[#FCFBFA] px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-[#B76E79] focus:bg-white"
                     />
@@ -166,6 +209,8 @@ export default function ContactPage() {
                       id="message"
                       required
                       rows={5}
+                      value={formData.message}
+                      onChange={handleChange}
                       placeholder="How can we help you today?"
                       className="w-full rounded-lg border border-[#D8C2B6] bg-[#FCFBFA] px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-[#B76E79] focus:bg-white resize-none"
                     />
