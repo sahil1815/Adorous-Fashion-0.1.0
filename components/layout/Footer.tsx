@@ -1,85 +1,219 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { Facebook, Instagram, Twitter } from "lucide-react";
+import { ChevronDown, Facebook, Instagram, Youtube, MessageCircle } from "lucide-react";
 
 export default function Footer() {
+  // This state tracks which accordion is open on mobile. Null means all are closed.
+  const [openSection, setOpenSection] = useState<string | null>(null);
+
+  const toggleSection = (section: string) => {
+    setOpenSection(openSection === section ? null : section);
+  };
+
+  const footerLinks = {
+    policies: [
+      { name: "Return & Refund Policy", href: "/return-policy" },
+      { name: "Exchange Policy", href: "/exchange-policy" },
+      { name: "Shipping & Delivery Policy", href: "/shipping-policy" },
+      { name: "Cancellation Policy", href: "/cancellation-policy" },
+      { name: "Privacy Policy", href: "/privacy-policy" },
+      { name: "Terms & Conditions", href: "/terms" },
+    ],
+    customerCare: [
+      { name: "Contact Us", href: "/contact" },
+      { name: "Size Guide", href: "/size-guide" },
+      { name: "Track Order", href: "/track-order" },
+      { name: "FAQs", href: "/faqs" },
+    ],
+  };
+
   return (
-    <footer className="bg-[#1A1A1A] text-[#F7E7CE] pt-16 pb-8">
-      <div className="container mx-auto px-6 md:px-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-16">
+    <footer className="bg-white border-t border-[#F7E7CE]/50 pt-16 pb-8">
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+        
+        {/* DESKTOP & TABLET LAYOUT (Hidden on mobile) */}
+        <div className="hidden md:flex justify-between gap-8 mb-16">
           
           {/* Brand Column */}
-          <div className="md:col-span-1">
-            <h3 className="text-2xl font-light tracking-widest mb-6" style={{ fontFamily: "var(--font-serif)" }}>
-              ADOROUS
+          <div className="w-1/4">
+            <h2 
+              className="text-2xl font-medium text-[#1A1A1A] tracking-wide mb-3"
+              style={{ fontFamily: "var(--font-serif)" }}
+            >
+              A D O R O U S
+            </h2>
+            <p className="text-sm text-gray-500 leading-relaxed mb-1">
+              Bangladesh's Premium Online Fashion Mall
+            </p>
+            {/* Optional: Add your Trade License or DBID here if needed */}
+            {/* <p className="text-[11px] text-gray-400">DBID - 123456789</p> */}
+          </div>
+
+          {/* Policies Column */}
+          <div className="w-1/4">
+            <h3 className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider mb-5">
+              Adorous Policies
             </h3>
-            <p className="text-sm text-[#F7E7CE]/70 leading-relaxed pr-4">
-              Handcrafted jewelry and artisanal bags for the modern woman. Timeless elegance, designed to be worn every day.
-            </p>
-          </div>
-
-          {/* Shop Links */}
-          <div>
-            <h4 className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#B76E79] mb-6">
-              Shop
-            </h4>
-            <ul className="space-y-4 text-sm text-[#F7E7CE]/70">
-              <li><Link href="/category/necklaces" className="hover:text-white transition-colors">Necklaces</Link></li>
-              <li><Link href="/category/earrings" className="hover:text-white transition-colors">Earrings</Link></li>
-              <li><Link href="/category/bracelets" className="hover:text-white transition-colors">Bracelets</Link></li>
-              <li><Link href="/category/bags" className="hover:text-white transition-colors">Bags</Link></li>
+            <ul className="space-y-3">
+              {footerLinks.policies.map((link) => (
+                <li key={link.name}>
+                  <Link href={link.href} className="text-[13px] text-gray-500 hover:text-[#B76E79] transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Support Links */}
-          <div>
-            <h4 className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#B76E79] mb-6">
-              Support
-            </h4>
-            <ul className="space-y-4 text-sm text-[#F7E7CE]/70">
-              <li><Link href="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
-              <li><Link href="/shipping" className="hover:text-white transition-colors">Shipping & Returns</Link></li>
-              <li><Link href="/care" className="hover:text-white transition-colors">Jewelry Care</Link></li>
-              <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+          {/* Customer Care Column */}
+          <div className="w-1/4">
+            <h3 className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider mb-5">
+              Customer Care
+            </h3>
+            <ul className="space-y-3">
+              {footerLinks.customerCare.map((link) => (
+                <li key={link.name}>
+                  <Link href={link.href} className="text-[13px] text-gray-500 hover:text-[#B76E79] transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Newsletter */}
-          <div>
-            <h4 className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#B76E79] mb-6">
-              Stay Connected
-            </h4>
-            <p className="text-sm text-[#F7E7CE]/70 mb-4">
-              Subscribe to receive updates, access to exclusive deals, and more.
-            </p>
-            <form className="flex flex-col space-y-3" onSubmit={(e) => e.preventDefault()}>
-              <input 
-                type="email" 
-                placeholder="Enter your email address" 
-                className="bg-transparent border-b border-[#F7E7CE]/30 pb-2 text-sm text-white placeholder:text-[#F7E7CE]/40 focus:outline-none focus:border-[#B76E79] transition-colors rounded-none"
-              />
-              <button 
-                type="submit" 
-                className="text-left text-[11px] uppercase tracking-[0.2em] text-[#B76E79] hover:text-white transition-colors mt-2"
-              >
-                Subscribe
-              </button>
-            </form>
+          {/* Social Links Column */}
+          <div className="w-1/4">
+            <h3 className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider mb-5">
+              Social Links
+            </h3>
+            <ul className="space-y-4">
+              <li>
+                <a href="#" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] transition-colors group">
+                  <Facebook size={18} className="group-hover:scale-110 transition-transform" /> Facebook
+                </a>
+              </li>
+              <li>
+                <a href="#" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] transition-colors group">
+                  <Instagram size={18} className="group-hover:scale-110 transition-transform" /> Instagram
+                </a>
+              </li>
+              <li>
+                <a href="#" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] transition-colors group">
+                  <Youtube size={18} className="group-hover:scale-110 transition-transform" /> YouTube
+                </a>
+              </li>
+              <li>
+                <a href="#" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] transition-colors group">
+                  <MessageCircle size={18} className="group-hover:scale-110 transition-transform" /> WhatsApp
+                </a>
+              </li>
+            </ul>
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-[#F7E7CE]/10 pt-8 flex flex-col md:flex-row items-center justify-between">
-          <p className="text-xs text-[#F7E7CE]/50 mb-4 md:mb-0 tracking-wider">
-            &copy; {new Date().getFullYear()} Adorous Fashion. All rights reserved.
+        {/* MOBILE LAYOUT WITH ACCORDIONS (Hidden on desktop) */}
+        <div className="flex flex-col md:hidden mb-12 space-y-2">
+          
+          {/* Mobile Brand Info */}
+          <div className="mb-6 text-center">
+            <h2 
+              className="text-2xl font-medium text-[#1A1A1A] tracking-wide mb-2"
+              style={{ fontFamily: "var(--font-serif)" }}
+            >
+              A D O R O U S
+            </h2>
+            <p className="text-xs text-gray-500">Premium Online Fashion</p>
+          </div>
+
+          {/* Policies Accordion */}
+          <div className="border-b border-gray-100">
+            <button 
+              onClick={() => toggleSection('policies')}
+              className="flex justify-between items-center w-full py-4 text-left"
+            >
+              <span className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider">Adorous Policies</span>
+              <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${openSection === 'policies' ? 'rotate-180' : ''}`} />
+            </button>
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openSection === 'policies' ? 'max-h-64 opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
+              <ul className="space-y-3 pt-1 pl-2">
+                {footerLinks.policies.map((link) => (
+                  <li key={link.name}>
+                    <Link href={link.href} className="text-[13px] text-gray-500 hover:text-[#B76E79] block py-1">
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Customer Care Accordion */}
+          <div className="border-b border-gray-100">
+            <button 
+              onClick={() => toggleSection('care')}
+              className="flex justify-between items-center w-full py-4 text-left"
+            >
+              <span className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider">Customer Care</span>
+              <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${openSection === 'care' ? 'rotate-180' : ''}`} />
+            </button>
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openSection === 'care' ? 'max-h-48 opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
+              <ul className="space-y-3 pt-1 pl-2">
+                {footerLinks.customerCare.map((link) => (
+                  <li key={link.name}>
+                    <Link href={link.href} className="text-[13px] text-gray-500 hover:text-[#B76E79] block py-1">
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Social Links Accordion */}
+          <div className="border-b border-gray-100">
+            <button 
+              onClick={() => toggleSection('socials')}
+              className="flex justify-between items-center w-full py-4 text-left"
+            >
+              <span className="text-sm font-semibold text-[#1A1A1A] uppercase tracking-wider">Social Links</span>
+              <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${openSection === 'socials' ? 'rotate-180' : ''}`} />
+            </button>
+            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${openSection === 'socials' ? 'max-h-48 opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
+              <ul className="space-y-3 pt-1 pl-2 flex flex-col gap-1">
+                <li>
+                  <a href="#" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] py-1">
+                    <Facebook size={16} /> Facebook
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] py-1">
+                    <Instagram size={16} /> Instagram
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] py-1">
+                    <Youtube size={16} /> YouTube
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] py-1">
+                    <MessageCircle size={16} /> WhatsApp
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* COPYRIGHT BOTTOM BAR */}
+        <div className="w-full text-center border-t border-gray-100 pt-6">
+          <p className="text-[11px] uppercase tracking-widest text-gray-400 font-semibold">
+            © {new Date().getFullYear()} Adorous. All Rights Reserved.
           </p>
-          <div className="flex space-x-6 text-[#F7E7CE]/50">
-            <a href="#" className="hover:text-[#B76E79] transition-colors"><Instagram size={18} strokeWidth={1.5} /></a>
-            <a href="#" className="hover:text-[#B76E79] transition-colors"><Facebook size={18} strokeWidth={1.5} /></a>
-            <a href="#" className="hover:text-[#B76E79] transition-colors"><Twitter size={18} strokeWidth={1.5} /></a>
-          </div>
         </div>
+
       </div>
     </footer>
   );
