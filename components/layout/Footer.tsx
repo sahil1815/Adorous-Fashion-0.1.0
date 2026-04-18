@@ -23,7 +23,6 @@ export default function Footer() {
     ],
     customerCare: [
       { name: "Contact Us", href: "/contact" },
-      { name: "Size Guide", href: "/size-guide" },
       { name: "Track Order", href: "/track-order" },
       { name: "FAQs", href: "/faqs" },
     ],
