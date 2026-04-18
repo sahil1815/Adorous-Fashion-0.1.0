@@ -5,6 +5,7 @@ import { getCurrentUser } from "@/lib/session";
 import connectDB from "@/lib/mongodb";
 import Order from "@/models/Order";
 import User from "@/models/User";
+import PasswordChangeClient from "./PasswordChangeClient";
 import ProfileClient from "./ProfileClient";
 import { ShoppingBag, LogOut, Package } from "lucide-react";
 
@@ -110,6 +111,8 @@ export default async function AccountPage() {
                 phone: dbUser?.phone,
               }}
             />
+            
+            <PasswordChangeClient />
 
             <div className="bg-white rounded-[20px] p-6 sm:p-8 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-8">
