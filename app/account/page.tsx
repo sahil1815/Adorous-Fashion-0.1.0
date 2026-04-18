@@ -111,10 +111,11 @@ export default async function AccountPage() {
                 phone: dbUser?.phone,
               }}
             />
-            
+
             <PasswordChangeClient />
 
-            <div className="bg-white rounded-[20px] p-6 sm:p-8 shadow-sm border border-gray-100">
+            {/* Order History Section */}
+            <div id="order-history" className="bg-white rounded-[20px] p-6 sm:p-8 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-8">
                 <Package className="text-gray-400" size={20} />
                 <h3
