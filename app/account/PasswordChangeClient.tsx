@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link"; // ✅ Added Link import
 import { Lock, Loader2, CheckCircle2 } from "lucide-react";
 
 export default function PasswordChangeClient() {
@@ -85,9 +86,18 @@ export default function PasswordChangeClient() {
         )}
 
         <div>
-          <label className="block text-[10px] uppercase tracking-wider font-semibold text-gray-500 mb-2 pl-1">
-            Current Password
-          </label>
+          {/* ✅ UPDATED: Flex container to align label and Forgot Password link */}
+          <div className="flex items-center justify-between mb-2 pl-1 pr-1">
+            <label className="block text-[10px] uppercase tracking-wider font-semibold text-gray-500">
+              Current Password
+            </label>
+            <Link 
+              href="/forgot-password" 
+              className="text-[11px] text-[#B76E79] hover:text-[#1A1A1A] transition-colors font-medium"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <input
             type="password"
             required
