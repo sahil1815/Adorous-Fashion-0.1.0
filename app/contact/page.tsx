@@ -132,7 +132,7 @@ export default function ContactPage() {
                     Message Sent!
                   </h3>
                   <p className="text-gray-500 text-sm">
-                    Thank you for reaching out to Adorous. Our customer care team will get back to you shortly.
+                    Thank you for reaching out to Adorous Fashion. Our customer care team will get back to you shortly.
                   </p>
                   <button 
                     onClick={() => setStatus("idle")}
@@ -163,7 +163,7 @@ export default function ContactPage() {
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        placeholder="Sidratul Muntaha"
+                        placeholder="Your Name"
                         className="w-full rounded-lg border border-[#D8C2B6] bg-[#FCFBFA] px-4 py-3 text-sm text-[#1A1A1A] outline-none transition focus:border-[#B76E79] focus:bg-white"
                       />
                     </div>
