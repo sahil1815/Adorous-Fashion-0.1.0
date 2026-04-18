@@ -23,7 +23,7 @@ export default function Footer() {
     ],
     customerCare: [
       { name: "Contact Us", href: "/contact" },
-      { name: "Track Order", href: "/track-order" },
+      { name: "Track Order", href: "/account" },
       { name: "FAQs", href: "/faqs" },
     ],
   };
@@ -89,12 +89,12 @@ export default function Footer() {
             </h3>
             <ul className="space-y-4">
               <li>
-                <a href="#" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] transition-colors group">
+                <a href="https://www.facebook.com/profile.php?id=61586765072169" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] transition-colors group">
                   <Facebook size={18} className="group-hover:scale-110 transition-transform" /> Facebook
                 </a>
               </li>
               <li>
-                <a href="#" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] transition-colors group">
+                <a href="https://www.instagram.com/adorous_fashion/?hl=en" className="flex items-center gap-3 text-[13px] text-gray-500 hover:text-[#B76E79] transition-colors group">
                   <Instagram size={18} className="group-hover:scale-110 transition-transform" /> Instagram
                 </a>
               </li>
