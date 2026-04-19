@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import ProductGridClient from "@/components/shop/ProductGridClient";
 import connectDB from "@/lib/mongodb";
 import Product from "@/models/Product";
-import Category from "@/models/Category"; // We need this to look up the ID!
+import Category from "@/models/Category"; 
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -15,7 +15,6 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   // 2. Find the actual Category document by its slug
   const categoryDoc = await Category.findOne({ slug: slug.toLowerCase() }).lean();
 
-  // If the category doesn't exist in the database, show a 404 page
   if (!categoryDoc) {
     return notFound();
   }
@@ -31,16 +30,27 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     id: p._id.toString(),
     slug: p.slug,
     name: p.name,
-    category: categoryDoc.name, // We already have the name from step 2
-    price: p.basePrice || 0,    // FIXED: schema uses basePrice
+    category: categoryDoc.name, 
+    price: p.basePrice || 0,    
     compareAtPrice: p.compareAtPrice,
     badge: p.badge,
+    
+    // ✅ FIXED 1 & 2: We must pass averageRating and soldCount to the card!
+    // This fixes the empty stars, the 0 sold, AND the Wishlist syncing bug.
+    averageRating: p.averageRating || 0,
+    soldCount: p.soldCount || 0,
+
     images: {
       primary: p.images?.[0] || { url: "", alt: p.name },
       hover: p.images?.[1] || undefined,
     },
-    swatches: [], // You can add swatch logic here later if needed
+    swatches: [], 
   }));
+
+  // ✅ FIXED 3: Detect the "N?A" or "N/A" typo from the database and show the elegant fallback
+  const validDescription = categoryDoc.description && categoryDoc.description !== "N?A" && categoryDoc.description !== "N/A"
+    ? categoryDoc.description
+    : `Explore our exclusive collection of ${categoryDoc.name.toLowerCase()}, crafted with precision and designed for the modern woman.`;
 
   return (
     <main className="min-h-screen bg-white pt-32 pb-24">
@@ -57,7 +67,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
             {categoryDoc.name}
           </h1>
           <p className="mt-4 max-w-xl text-sm tracking-wide text-[#1A1A1A]/70">
-            {categoryDoc.description || `Explore our exclusive collection of ${categoryDoc.name.toLowerCase()}, crafted with precision and designed for the modern woman.`}
+            {validDescription}
           </p>
         </div>
 
