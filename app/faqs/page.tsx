@@ -45,7 +45,7 @@ export default function FaqsPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#FCFBFA] pt-32 pb-24 px-4 sm:px-6">
+    <main className="min-h-screen bg-[#FCFBFA] pt-32 md:pt-48 pb-24 px-4 sm:px-6">
       <div className="mx-auto w-full max-w-3xl">
         
         {/* Back Button & Page Title */}
