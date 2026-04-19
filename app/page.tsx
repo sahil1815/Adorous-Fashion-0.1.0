@@ -1,26 +1,26 @@
 // app/page.tsx
-//
-// This is a SERVER component — it fetches/defines data and passes it down.
-// Interactive callbacks (onQuickView, onWishlistToggle) live in the
-// client wrapper below so they never cross the server→client boundary.
-
 import Hero from "@/components/home/Hero";
 import ProductGridClient from "@/components/shop/ProductGridClient";
 import type { ProductCardProps } from "@/components/shop/ProductCard";
 import Link from "next/link";
+import { cache } from "react";
 import connectDB from "@/lib/mongodb";
 import Product from "@/models/Product";
 
-export const dynamic = "force-dynamic";
+// ✅ OPTIMIZATION 1: Remove "force-dynamic" and replace it with "revalidate".
+// Vercel will now serve your homepage instantly from its ultra-fast edge network,
+// and silently fetch fresh data from MongoDB in the background every 60 seconds!
+export const revalidate = 60;
 
 // ---------------------------------------------------------------------------
 // Fetch Best Selling products from database
 // ---------------------------------------------------------------------------
-async function getBestSellers(): Promise<ProductCardProps[]> {
+
+// ✅ OPTIMIZATION 2: Wrap the fetcher in React's `cache` function
+const getBestSellers = cache(async (): Promise<ProductCardProps[]> => {
   try {
     await connectDB();
 
-    // ✅ FIXED QUERY: Now sorts by popularity (reviewCount) and features first!
     const rawProducts = await Product.find({ isActive: true })
       .populate("category", "name")
       .sort({ reviewCount: -1, isFeatured: -1, createdAt: -1 })
@@ -50,7 +50,7 @@ async function getBestSellers(): Promise<ProductCardProps[]> {
     console.warn("Database not available, returning empty products:", error);
     return [];
   }
-}
+});
 
 // Helper to extract color from variant attributes
 function getColorFromVariant(variant: any): string {
@@ -84,11 +84,9 @@ export default async function HomePage() {
       <section className="mx-auto max-w-[1400px] px-6 py-16 md:px-10">
         <div className="mb-10 flex items-end justify-between">
           <div>
-            {/* ✅ FIXED: Updated Subheading */}
             <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.25em] text-[#B76E79]">
               Our Most Popular
             </p>
-            {/* ✅ FIXED: Updated Main Heading */}
             <h2
               className="text-3xl font-light text-[#1A1A1A] md:text-4xl"
               style={{ fontFamily: "var(--font-serif)" }}
