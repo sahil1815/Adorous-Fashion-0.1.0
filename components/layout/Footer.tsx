@@ -29,7 +29,7 @@ export default function Footer() {
   };
 
   return (
-      <footer className="bg-[#FAF9F7] border-t border-[#F7E7CE] pt-16 pb-8">
+      <footer className="bg-[#FAF9F7] border-t border-[#F7E7CE] pt-10 pb-6">
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
         
         {/* DESKTOP & TABLET LAYOUT (Hidden on mobile) */}
