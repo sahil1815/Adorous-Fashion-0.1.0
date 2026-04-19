@@ -194,7 +194,7 @@ export default async function AccountPage() {
                                   // If product exists in DB, link to it. If deleted, search for the name as a fallback!
                                   const productSlug = item.product?.slug;
                                   const itemHref = productSlug
-                                    ? `/product/${productSlug}`
+                                    ? `/products/${productSlug}`
                                     : `/search?q=${encodeURIComponent(item.name)}`;
 
                                   return (
