@@ -1,6 +1,7 @@
 // app/products/[slug]/page.tsx
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import { cache } from "react";
 import connectDB from "@/lib/mongodb";
 import Product from "@/models/Product";
 import ProductGallery from "@/components/shop/ProductGallery";
@@ -8,16 +9,24 @@ import ProductInfo from "@/components/shop/ProductInfo";
 import ProductGrid from "@/components/shop/ProductGrid";
 import type { ProductCardProps } from "@/components/shop/ProductCard";
 
-// Safely await params for Next.js 15 compatibility
 type Props = { params: Promise<{ slug: string }> | { slug: string } };
+
+// ✅ OPTIMIZATION 1: Use React `cache` to deduplicate database calls
+// If Metadata calls this, and then the Page calls it right after, 
+// Next.js will only ping MongoDB ONCE.
+const getProductBySlug = cache(async (slug: string) => {
+  await connectDB();
+  // We use lowercase exact match instead of slow Regex
+  return await Product.findOne({ slug: slug.toLowerCase() })
+    .populate("category", "name slug")
+    .lean();
+});
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params;
-  await connectDB();
   
-  const product = await Product.findOne({ 
-    slug: { $regex: new RegExp(`^${params.slug}$`, "i") } 
-  }).lean();
+  // Call our cached fetcher
+  const product = await getProductBySlug(params.slug);
 
   if (!product) return { title: "Product Not Found" };
 
@@ -29,13 +38,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function ProductDetailPage(props: Props) {
   const params = await props.params;
-  await connectDB();
-
-  const raw = await Product.findOne({ 
-    slug: { $regex: new RegExp(`^${params.slug}$`, "i") } 
-  })
-    .populate("category", "name slug")
-    .lean();
+  
+  // Call our cached fetcher (This will be instantly returned from memory, no DB call!)
+  const raw = await getProductBySlug(params.slug);
 
   if (!raw) notFound();
 
@@ -68,12 +73,13 @@ export default async function ProductDetailPage(props: Props) {
     attributes: v.attributes || {},
   })) : [];
 
+  // Related products query (Optimized)
   const relatedRaw = await Product.find({
     category: raw.category?._id || raw.category, 
     _id: { $ne: raw._id },
+    isActive: true // Good practice to only show active related products
   }).limit(4).lean();
 
-  // ✅ THE FIX IS HERE: We added averageRating and soldCount to the related products!
   const relatedProducts: ProductCardProps[] = relatedRaw.map((p: any) => {
     const pImage = Array.isArray(p.images) && p.images[0]?.url ? p.images[0].url : "/placeholder.jpg";
     return {
@@ -83,8 +89,8 @@ export default async function ProductDetailPage(props: Props) {
       category: categoryName,
       price: p.basePrice || 0,
       compareAtPrice: p.compareAtPrice,
-      averageRating: p.averageRating || 0, // ✅ ADDED
-      soldCount: p.soldCount || 0,         // ✅ ADDED
+      averageRating: p.averageRating || 0, 
+      soldCount: p.soldCount || 0,         
       images: { primary: { url: pImage, alt: p.name } },
     };
   });
@@ -98,7 +104,7 @@ export default async function ProductDetailPage(props: Props) {
           <span>/</span>
           <a href="/shop" className="hover:text-[#B76E79] transition-colors">Shop</a>
           <span>/</span>
-          <a href={`/shop?category=${categorySlug}`} className="hover:text-[#B76E79] transition-colors">{categoryName}</a>
+          <a href={`/category/${categorySlug}`} className="hover:text-[#B76E79] transition-colors">{categoryName}</a>
           <span>/</span>
           <span className="text-[#1A1A1A] font-medium">{raw.name}</span>
         </nav>
