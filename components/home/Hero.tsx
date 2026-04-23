@@ -13,9 +13,6 @@ export default function Hero() {
         
         {/* Text Content */}
         <div className="z-10 w-full text-center md:w-1/2 md:text-left animate-in fade-in slide-in-from-bottom-5 duration-1000">
-          <p className="mb-4 text-[10px] md:text-[12px] font-medium uppercase tracking-[0.4em] text-[#B76E79]">
-            Est. 2026 — Adorous
-          </p>
           <h1 className="mb-6 text-4xl sm:text-5xl font-light leading-tight text-[#1A1A1A] md:text-7xl lg:text-8xl" style={{ fontFamily: "var(--font-serif)" }}>
             Refined <br /> 
             <span className="italic">Adornments</span>
