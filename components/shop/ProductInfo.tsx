@@ -232,7 +232,7 @@ export default function ProductInfo({
       label: "Product Details",
       content: (
         <div className="space-y-2">
-          {description && <p>{description}</p>}
+          {description && <p className="whitespace-pre-wrap">{description}</p>}
           {materials && (
             <p><span className="text-[#1A1A1A]/80 font-medium">Materials:</span> {materials}</p>
           )}
