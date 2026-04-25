@@ -32,21 +32,37 @@ if (!cached) {
 
 async function connectDB(): Promise<mongoose.Connection> {
   // If we already have a live connection, return it immediately.
-  if (cached.conn) return cached.conn;
+  if (cached.conn && cached.conn.readyState === 1) {
+    return cached.conn;
+  }
 
   // If a connection is in-flight (e.g. two API routes hit simultaneously),
   // wait for the same promise rather than opening two connections.
   if (!cached.promise) {
     const opts: mongoose.ConnectOptions = {
-      bufferCommands: false, // fail fast instead of queuing queries
+      // By omitting `bufferCommands: false`, Mongoose relies on its default (true),
+      // effectively queuing up queries quietly instead of throwing immediate
+      // connected errors during cold starts or transient network blips.
     };
 
     cached.promise = mongoose
       .connect(MONGODB_URI, opts)
-      .then((m) => m.connection);
+      .then((m) => m.connection)
+      .catch((err) => {
+        // If the initial connection fails, clear the promise cache
+        // to prevent subsequent calls from hanging on a dead promise.
+        cached.promise = null;
+        throw err;
+      });
   }
 
-  cached.conn = await cached.promise;
+  try {
+    cached.conn = await cached.promise;
+  } catch (err) {
+    cached.promise = null;
+    throw err;
+  }
+
   return cached.conn;
 }
 

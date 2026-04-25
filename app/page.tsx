@@ -18,38 +18,33 @@ export const revalidate = 60;
 
 // ✅ OPTIMIZATION 2: Wrap the fetcher in React's `cache` function
 const getBestSellers = cache(async (): Promise<ProductCardProps[]> => {
-  try {
-    await connectDB();
+  await connectDB();
 
-    const rawProducts = await Product.find({ isActive: true })
-      .populate("category", "name")
-      .sort({ reviewCount: -1, isFeatured: -1, createdAt: -1 })
-      .limit(8)
-      .lean();
+  const rawProducts = await Product.find({ isActive: true })
+    .populate("category", "name")
+    .sort({ reviewCount: -1, isFeatured: -1, createdAt: -1 })
+    .limit(8)
+    .lean();
 
-    return rawProducts.map((p: any) => ({
-      id: p._id.toString(),
-      slug: p.slug,
-      name: p.name,
-      category: p.category?.name || "Uncategorized",
-      price: p.basePrice,
-      compareAtPrice: p.compareAtPrice,
-      averageRating: p.averageRating || 0, 
-      soldCount: p.soldCount || 0,         
-      badge: p.isOnSale ? "sale" : undefined,
-      images: {
-        primary: p.primaryImage || p.images?.[0] || { url: "", alt: "" },
-        hover: p.images?.[1] || undefined,
-      },
-      swatches: p.variants?.slice(0, 3).map((v: any) => ({
-        label: v.attributes?.color || v.attributes?.Color || "Default",
-        color: getColorFromVariant(v),
-      })) || [],
-    }));
-  } catch (error) {
-    console.warn("Database not available, returning empty products:", error);
-    return [];
-  }
+  return rawProducts.map((p: any) => ({
+    id: p._id.toString(),
+    slug: p.slug,
+    name: p.name,
+    category: p.category?.name || "Uncategorized",
+    price: p.basePrice,
+    compareAtPrice: p.compareAtPrice,
+    averageRating: p.averageRating || 0, 
+    soldCount: p.soldCount || 0,         
+    badge: p.isOnSale ? "sale" : undefined,
+    images: {
+      primary: p.primaryImage || p.images?.[0] || { url: "", alt: "" },
+      hover: p.images?.[1] || undefined,
+    },
+    swatches: p.variants?.slice(0, 3).map((v: any) => ({
+      label: v.attributes?.color || v.attributes?.Color || "Default",
+      color: getColorFromVariant(v),
+    })) || [],
+  }));
 });
 
 // Helper to extract color from variant attributes
