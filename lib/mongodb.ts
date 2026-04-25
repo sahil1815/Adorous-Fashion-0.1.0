@@ -1,5 +1,10 @@
 import mongoose from "mongoose";
 
+// Ensure models are registered in Serverless environments to prevent 
+// MissingSchemaError on cold starts when using .populate()
+import "@/models/Category";
+import "@/models/Product";
+import "@/models/User";
 // ---------------------------------------------------------------------------
 // Extend the global NodeJS namespace so TypeScript knows about our cached
 // connection. This avoids "property does not exist on type Global" errors.

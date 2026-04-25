@@ -6,10 +6,10 @@ import Link from "next/link";
 import { cache } from "react";
 import connectDB from "@/lib/mongodb";
 import Product from "@/models/Product";
+import Category from "@/models/Category";
 
-// ✅ OPTIMIZATION 1: Remove "force-dynamic" and replace it with "revalidate".
-// Vercel will now serve your homepage instantly from its ultra-fast edge network,
-// and silently fetch fresh data from MongoDB in the background every 60 seconds!
+// ✅ OPTIMIZATION 1: Use "revalidate" instead of "force-dynamic".
+// Vercel will serve your homepage instantly and fetch fresh data in the background every 60 seconds!
 export const revalidate = 60;
 
 // ---------------------------------------------------------------------------

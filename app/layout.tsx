@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Jost, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 
+import FacebookPixel from "@/components/FacebookPixel";
+
 // Import our new smart wrapper
 import ConditionalLayout from "@/components/layout/ConditionalLayout";
 
@@ -35,6 +37,7 @@ export default function RootLayout({
           {children}
         </ConditionalLayout>
         
+        <FacebookPixel />
       </body>
     </html>
   );
