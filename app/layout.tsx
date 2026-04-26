@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Jost, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
-// ✅ IMPORT SUSPENSE
+
+// ✅ 1. Suspense import korun
 import { Suspense } from "react"; 
 
 import FacebookPixel from "@/components/FacebookPixel";
@@ -32,11 +33,14 @@ export default function RootLayout({
     <html lang="en" className={`${jost.variable} ${cormorant.variable}`}>
       <body className="bg-white font-sans text-[#1A1A1A] antialiased selection:bg-[#B76E79]/30">
         
-        <ConditionalLayout>
-          {children}
-        </ConditionalLayout>
+        {/* ✅ 2. ConditionalLayout ke Suspense er vitor rakha holo */}
+        <Suspense fallback={null}>
+          <ConditionalLayout>
+            {children}
+          </ConditionalLayout>
+        </Suspense>
         
-        {/* ✅ WRAPPED IN SUSPENSE */}
+        {/* ✅ 3. Facebook Pixel keo Suspense er vitor rakha holo */}
         <Suspense fallback={null}>
           <FacebookPixel />
         </Suspense>
