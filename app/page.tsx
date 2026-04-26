@@ -76,7 +76,7 @@ export default async function HomePage() {
       <Hero />
 
       {/* ── Best Sellers Section ──────────────────────────────────────── */}
-      <section className="mx-auto max-w-[1400px] px-6 py-16 md:px-10">
+      <section id="best-sellers" className="mx-auto max-w-[1400px] px-6 py-16 md:px-10">
         <div className="mb-10 flex items-end justify-between">
           <div>
             <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.25em] text-[#B76E79]">
