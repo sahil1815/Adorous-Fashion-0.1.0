@@ -30,7 +30,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jost.variable} ${cormorant.variable}`}>
+    // ✅ এখানে scroll-smooth ক্লাসটি যুক্ত করা হয়েছে
+    <html lang="en" className={`${jost.variable} ${cormorant.variable} scroll-smooth`}>
       <body className="bg-white font-sans text-[#1A1A1A] antialiased selection:bg-[#B76E79]/30">
         
         {/* ✅ 2. ConditionalLayout ke Suspense er vitor rakha holo */}
