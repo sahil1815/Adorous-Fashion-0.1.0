@@ -1,20 +1,20 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+// ✅ 1. useSearchParams kete deya hoyeche, shudhu usePathname ache
+import { usePathname } from "next/navigation"; 
 import Script from "next/script";
 import { useEffect } from "react";
 
 export default function FacebookPixel() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const pixelId = process.env.NEXT_PUBLIC_FB_PIXEL_ID;
 
   useEffect(() => {
-    // Next.js e route change hole jeno PageView track hoy
+    // Next.js e route (page) change hole jeno PageView track hoy
     if (typeof window !== "undefined" && (window as any).fbq) {
       (window as any).fbq("track", "PageView");
     }
-  }, [pathname, searchParams]);
+  }, [pathname]); // ✅ 2. Eikhan thekeo searchParams soriye deya hoyeche
 
   if (!pixelId) return null;
 
